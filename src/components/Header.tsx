@@ -24,7 +24,7 @@ export const Header = () => {
           {/* Logo */}
           <div className="flex items-center space-x-2">
             <div className="text-2xl font-bold text-purple-800">
-              Hijabi Al Emarat
+              Hijab Al Emarat
             </div>
           </div>
 

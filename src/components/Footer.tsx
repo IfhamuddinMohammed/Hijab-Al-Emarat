@@ -8,7 +8,7 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
-            <h3 className="text-2xl font-bold mb-4">Hijabi Al Emarat</h3>
+            <h3 className="text-2xl font-bold mb-4">Hijab Al Emarat</h3>
             <p className="text-purple-200 mb-4 max-w-md">
               Hijabs that Reflect Light, Faith & Fashion. Bringing the finest collection 
               of hijabs, abayas, and modest fashion from Dubai to India.
@@ -57,7 +57,7 @@ export const Footer = () => {
 
         <div className="border-t border-purple-800 mt-8 pt-8 text-center">
           <p className="text-purple-200">
-            © 2024 Hijabi Al Emarat. All rights reserved. | Hijabs that Reflect Light, Faith & Fashion
+            © 2024 Hijab Al Emarat. All rights reserved. | Hijabs that Reflect Light, Faith & Fashion
           </p>
         </div>
       </div>

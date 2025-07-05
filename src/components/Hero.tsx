@@ -23,7 +23,7 @@ export const Hero = () => {
       <div className="container mx-auto px-4 text-center relative z-10">
         <div className="animate-fade-in">
           <h1 className="text-6xl md:text-8xl font-serif font-bold mb-6 leading-tight text-desert">
-            Hijabi <span className="text-gold">Al Emarat</span>
+            Hijab <span className="text-gold">Al Emarat</span>
           </h1>
           
           {/* Arabic text */}
@@ -52,7 +52,7 @@ export const Hero = () => {
             variant="outline"
             size="lg"
             className="border-2 border-desert text-desert hover:bg-desert hover:text-cream px-10 py-4 text-lg shadow-elegant hover:shadow-elegant-hover transition-all duration-300"
-            onClick={() => window.open("https://wa.me/971XXXXXXXXX", "_blank")}
+            onClick={() => window.open("https://wa.me/971582109797", "_blank")}
           >
             WhatsApp Us
           </Button>

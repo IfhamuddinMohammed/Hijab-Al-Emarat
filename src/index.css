@@ -4,13 +4,12 @@
 @tailwind utilities;
 
 /* Import elegant fonts */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Poppins:wght@300;400;500;600;700&display=swap');
 
-/* Definition of the design system with elegant color palette */
 @layer base {
   :root {
-    --background: 48 28% 95%; /* Cream background */
-    --foreground: 20 14% 20%; /* Dark brown text */
+    --background: 48 28% 95%;
+    --foreground: 20 14% 20%;
 
     --card: 0 0% 100%;
     --card-foreground: 20 14% 20%;
@@ -18,38 +17,36 @@
     --popover: 0 0% 100%;
     --popover-foreground: 20 14% 20%;
 
-    --primary: 35 35% 15%; /* Rich brown */
+    --primary: 35 35% 15%;
     --primary-foreground: 48 28% 95%;
 
-    --secondary: 43 19% 90%; /* Soft beige */
+    --secondary: 43 19% 90%;
     --secondary-foreground: 20 14% 20%;
 
-    --muted: 43 19% 88%; /* Light sand */
+    --muted: 43 19% 88%;
     --muted-foreground: 20 14% 60%;
 
-    --accent: 43 74% 66%; /* Gold accent */
+    --accent: 43 74% 52%;
     --accent-foreground: 20 14% 20%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 43 19% 85%; /* Soft border */
+    --border: 43 19% 85%;
     --input: 43 19% 88%;
     --ring: 35 35% 15%;
 
-    --radius: 0.75rem;
+    --radius: 0rem;
 
-    /* Custom colors for the brand */
     --sand: 43 19% 88%;
     --cream: 48 28% 95%;
-    --gold: 43 74% 66%;
+    --gold: 43 74% 52%;
     --desert-brown: 35 35% 15%;
   }
 
   .dark {
     --background: 35 35% 15%;
     --foreground: 48 28% 95%;
-    /* ... keep existing dark theme variables */
   }
 }
 
@@ -59,46 +56,185 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground;
     font-family: 'Poppins', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Playfair Display', serif;
   }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
-/* Custom utility classes for the brand */
 @layer utilities {
   .text-desert-brown {
     color: hsl(var(--desert-brown));
   }
-  
+
   .bg-sand {
     background-color: hsl(var(--sand));
   }
-  
+
   .bg-cream {
     background-color: hsl(var(--cream));
   }
-  
+
   .text-gold {
-    color: hsl(var(--gold));
+    color: #D4AF37;
   }
-  
+
   .bg-gold {
-    background-color: hsl(var(--gold));
+    background-color: #D4AF37;
   }
-  
+
   .border-gold {
-    border-color: hsl(var(--gold));
+    border-color: #D4AF37;
   }
 
   .shadow-elegant {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   }
-  
+
   .shadow-elegant-hover {
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
   }
+
+  /* Gold shimmer animation */
+  .gold-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(212, 175, 55, 0.15) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2.5s infinite linear;
+  }
+
+  /* Premium card */
+  .premium-card {
+    border: 1px solid #EAD7BB;
+    transition: all 0.3s ease;
+  }
+
+  .premium-card:hover {
+    border-color: #D4AF37;
+    box-shadow: 0 8px 40px rgba(212, 175, 55, 0.15);
+  }
+
+  /* Gold gradient text */
+  .text-gold-gradient {
+    background: linear-gradient(135deg, #D4AF37 0%, #F5D78E 50%, #B8972A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Gold divider */
+  .gold-divider {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #D4AF37, transparent);
+  }
+
+  /* Luxury button */
+  .btn-luxury {
+    background-color: #1C0F00;
+    color: white;
+    padding: 12px 32px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    transition: all 0.3s ease;
+    border: none;
+  }
+
+  .btn-luxury:hover {
+    background-color: #D4AF37;
+    color: #1C0F00;
+  }
+
+  /* Gold outline button */
+  .btn-gold-outline {
+    background: transparent;
+    color: #D4AF37;
+    padding: 12px 32px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    border: 1.5px solid #D4AF37;
+    transition: all 0.3s ease;
+  }
+
+  .btn-gold-outline:hover {
+    background-color: #D4AF37;
+    color: #1C0F00;
+  }
+}
+
+/* Keyframes */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes fade-in {
+  0% { opacity: 0; transform: translateY(16px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in-right {
+  0% { opacity: 0; transform: translateX(-20px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(212, 175, 55, 0); }
+}
+
+/* Apply animations */
+.animate-fade-in {
+  animation: fade-in 0.7s ease-out both;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-gold {
+  animation: pulse-gold 2s ease-in-out infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #FDF5E6;
+}
+::-webkit-scrollbar-thumb {
+  background: #D4AF37;
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B8972A;
+}
+
+/* Selection color */
+::selection {
+  background-color: rgba(212, 175, 55, 0.25);
+  color: #1C0F00;
 }

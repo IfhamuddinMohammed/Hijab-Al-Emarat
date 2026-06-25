@@ -10,20 +10,26 @@ import { MessageCircle, Phone, Mail, MapPin, Clock, Instagram } from "lucide-rea
 const Contact = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log("Form submitted");
+    const whatsappMsg = "Hi! I've submitted a contact form on your website. Please get in touch!";
+    window.open(`https://wa.me/971582109797?text=${encodeURIComponent(whatsappMsg)}`, "_blank");
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#FDF5E6]">
       <Header />
-      
+
       {/* Page Header */}
-      <section className="bg-purple-100 py-12">
+      <section className="bg-[#1C0F00] py-14 relative overflow-hidden">
+        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60" />
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl font-bold text-purple-800 mb-4">Contact Us</h1>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-            We're here to help! Reach out to us through any of the channels below
+          <div className="inline-flex items-center gap-3 mb-4">
+            <div className="h-[1px] w-10 bg-[#D4AF37]" />
+            <span className="text-[#D4AF37] text-xs tracking-[0.3em] font-medium uppercase">Get In Touch</span>
+            <div className="h-[1px] w-10 bg-[#D4AF37]" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-white mb-3">Contact Us</h1>
+          <p className="text-white/50 text-lg max-w-2xl mx-auto">
+            We're here to help! Reach out through any channel below
           </p>
         </div>
       </section>
@@ -34,22 +40,20 @@ const Contact = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Contact Methods */}
             <div>
-              <h2 className="text-3xl font-bold text-purple-800 mb-8">Get In Touch</h2>
-              
-              <div className="space-y-8">
+              <h2 className="text-3xl font-serif font-bold text-[#1C0F00] mb-8">Reach Us</h2>
+
+              <div className="space-y-6">
                 {/* WhatsApp */}
-                <div className="flex items-start space-x-4">
-                  <div className="bg-green-100 p-3 rounded-lg">
-                    <MessageCircle className="w-6 h-6 text-green-600" />
+                <div className="flex items-start gap-4 p-5 border border-[#EAD7BB] hover:border-[#D4AF37] transition-colors group">
+                  <div className="w-10 h-10 bg-[#25D366]/10 flex items-center justify-center flex-shrink-0">
+                    <MessageCircle className="w-5 h-5 text-[#25D366]" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">WhatsApp (Preferred)</h3>
-                    <p className="text-gray-600 mb-3">
-                      For quick responses and instant product inquiries
-                    </p>
+                    <h3 className="text-base font-semibold text-[#1C0F00] mb-1">WhatsApp (Preferred)</h3>
+                    <p className="text-[#8B4513]/60 text-sm mb-3">For quick responses and instant product inquiries</p>
                     <Button
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                      onClick={() => window.open("https://wa.me/971XXXXXXXXX", "_blank")}
+                      className="bg-[#25D366] hover:bg-[#1da851] text-white text-sm font-medium rounded-none"
+                      onClick={() => window.open("https://wa.me/971582109797", "_blank")}
                     >
                       <MessageCircle className="w-4 h-4 mr-2" />
                       Chat on WhatsApp
@@ -58,68 +62,66 @@ const Contact = () => {
                 </div>
 
                 {/* Phone */}
-                <div className="flex items-start space-x-4">
-                  <div className="bg-purple-100 p-3 rounded-lg">
-                    <Phone className="w-6 h-6 text-purple-600" />
+                <div className="flex items-start gap-4 p-5 border border-[#EAD7BB] hover:border-[#D4AF37] transition-colors">
+                  <div className="w-10 h-10 bg-[#D4AF37]/10 flex items-center justify-center flex-shrink-0">
+                    <Phone className="w-5 h-5 text-[#D4AF37]" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Phone</h3>
-                    <p className="text-gray-600 mb-2">+971 582109797</p>
-                    <p className="text-gray-600 mb-2">+91 8686850232</p>
-                    <p className="text-sm text-gray-500">Available: 9 AM - 8 PM GST</p>
+                    <h3 className="text-base font-semibold text-[#1C0F00] mb-1">Phone</h3>
+                    <p className="text-[#8B4513]/70 text-sm">+971 582 109 797 (UAE)</p>
+                    <p className="text-[#8B4513]/70 text-sm">+91 8686 850 232 (India)</p>
+                    <p className="text-[#8B4513]/40 text-xs mt-1">Available: 9 AM – 8 PM GST</p>
                   </div>
                 </div>
 
                 {/* Email */}
-                <div className="flex items-start space-x-4">
-                  <div className="bg-blue-100 p-3 rounded-lg">
-                    <Mail className="w-6 h-6 text-blue-600" />
+                <div className="flex items-start gap-4 p-5 border border-[#EAD7BB] hover:border-[#D4AF37] transition-colors">
+                  <div className="w-10 h-10 bg-[#D4AF37]/10 flex items-center justify-center flex-shrink-0">
+                    <Mail className="w-5 h-5 text-[#D4AF37]" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Email</h3>
-                    <p className="text-gray-600 mb-2">contact.hijabialemarat@gmail.com</p>
-                    <p className="text-sm text-gray-500">We'll respond within 24 hours</p>
+                    <h3 className="text-base font-semibold text-[#1C0F00] mb-1">Email</h3>
+                    <p className="text-[#8B4513]/70 text-sm">contact.hijabialemarat@gmail.com</p>
+                    <p className="text-[#8B4513]/40 text-xs mt-1">We'll respond within 24 hours</p>
                   </div>
                 </div>
 
                 {/* Location */}
-                <div className="flex items-start space-x-4">
-                  <div className="bg-red-100 p-3 rounded-lg">
-                    <MapPin className="w-6 h-6 text-red-600" />
+                <div className="flex items-start gap-4 p-5 border border-[#EAD7BB] hover:border-[#D4AF37] transition-colors">
+                  <div className="w-10 h-10 bg-[#D4AF37]/10 flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-5 h-5 text-[#D4AF37]" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Location</h3>
-                    <p className="text-gray-600 mb-2">Dubai, United Arab Emirates</p>
-                    <p className="text-sm text-gray-500">Serving customers across India</p>
+                    <h3 className="text-base font-semibold text-[#1C0F00] mb-1">Location</h3>
+                    <p className="text-[#8B4513]/70 text-sm">Dubai, United Arab Emirates</p>
+                    <p className="text-[#8B4513]/40 text-xs mt-1">Serving customers across all India</p>
                   </div>
                 </div>
 
-                {/* Social Media */}
-                <div className="flex items-start space-x-4">
-                  <div className="bg-pink-100 p-3 rounded-lg">
-                    <Instagram className="w-6 h-6 text-pink-600" />
+                {/* Social */}
+                <div className="flex items-start gap-4 p-5 border border-[#EAD7BB] hover:border-[#D4AF37] transition-colors">
+                  <div className="w-10 h-10 bg-[#D4AF37]/10 flex items-center justify-center flex-shrink-0">
+                    <Instagram className="w-5 h-5 text-[#D4AF37]" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Follow Us</h3>
-                    <p className="text-gray-600 mb-3">Stay updated with our latest collections</p>
-                    <div className="flex space-x-3">
-                      <Button variant="outline" size="sm">
-                        <Instagram className="w-4 h-4 mr-2" />
-                        Instagram
-                      </Button>
-                    </div>
+                    <h3 className="text-base font-semibold text-[#1C0F00] mb-1">Follow Us</h3>
+                    <p className="text-[#8B4513]/60 text-sm mb-2">Stay updated with our latest collections</p>
+                    <Button variant="outline" size="sm" className="border-[#EAD7BB] hover:border-[#D4AF37] text-[#8B4513] rounded-none text-xs">
+                      <Instagram className="w-3 h-3 mr-2" />
+                      Instagram
+                    </Button>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Contact Form */}
-            <div className="bg-gray-50 p-8 rounded-lg">
-              <h2 className="text-3xl font-bold text-purple-800 mb-6">Send Us a Message</h2>
-              
-              <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="bg-[#FDF5E6] p-8 border border-[#EAD7BB]">
+              <h2 className="text-3xl font-serif font-bold text-[#1C0F00] mb-6">Send a Message</h2>
+
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="name" className="block text-xs font-semibold text-[#8B4513] tracking-wider uppercase mb-2">
                     Full Name *
                   </label>
                   <Input
@@ -127,12 +129,12 @@ const Contact = () => {
                     type="text"
                     required
                     placeholder="Enter your full name"
-                    className="w-full"
+                    className="rounded-none border-[#EAD7BB] focus:border-[#D4AF37] focus:ring-0 bg-white"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="email" className="block text-xs font-semibold text-[#8B4513] tracking-wider uppercase mb-2">
                     Email Address *
                   </label>
                   <Input
@@ -140,24 +142,24 @@ const Contact = () => {
                     type="email"
                     required
                     placeholder="Enter your email address"
-                    className="w-full"
+                    className="rounded-none border-[#EAD7BB] focus:border-[#D4AF37] focus:ring-0 bg-white"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="phone" className="block text-xs font-semibold text-[#8B4513] tracking-wider uppercase mb-2">
                     Phone Number
                   </label>
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="Enter your phone number"
-                    className="w-full"
+                    placeholder="Your phone number"
+                    className="rounded-none border-[#EAD7BB] focus:border-[#D4AF37] focus:ring-0 bg-white"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="subject" className="block text-xs font-semibold text-[#8B4513] tracking-wider uppercase mb-2">
                     Subject *
                   </label>
                   <Input
@@ -165,12 +167,12 @@ const Contact = () => {
                     type="text"
                     required
                     placeholder="What's this about?"
-                    className="w-full"
+                    className="rounded-none border-[#EAD7BB] focus:border-[#D4AF37] focus:ring-0 bg-white"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="message" className="block text-xs font-semibold text-[#8B4513] tracking-wider uppercase mb-2">
                     Message *
                   </label>
                   <Textarea
@@ -178,15 +180,18 @@ const Contact = () => {
                     required
                     rows={5}
                     placeholder="Tell us how we can help you..."
-                    className="w-full"
+                    className="rounded-none border-[#EAD7BB] focus:border-[#D4AF37] focus:ring-0 bg-white resize-none"
                   />
                 </div>
 
-                <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+                <Button
+                  type="submit"
+                  className="w-full bg-[#1C0F00] hover:bg-[#D4AF37] hover:text-[#1C0F00] text-white rounded-none font-semibold tracking-wider uppercase text-sm h-11 transition-all duration-300"
+                >
                   Send Message
                 </Button>
 
-                <p className="text-sm text-gray-500 text-center">
+                <p className="text-xs text-[#8B4513]/40 text-center">
                   For faster responses, consider reaching out via WhatsApp
                 </p>
               </form>
@@ -196,24 +201,24 @@ const Contact = () => {
       </section>
 
       {/* Business Hours */}
-      <section className="py-12 bg-purple-50">
+      <section className="py-12 bg-[#FDF5E6] border-t border-[#EAD7BB]">
         <div className="container mx-auto px-4">
-          <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
-              <Clock className="w-8 h-8 text-purple-600" />
+          <div className="text-center max-w-md mx-auto">
+            <div className="w-12 h-12 border border-[#D4AF37]/30 flex items-center justify-center mx-auto mb-4">
+              <Clock className="w-5 h-5 text-[#D4AF37]" />
             </div>
-            <h3 className="text-2xl font-bold text-purple-800 mb-4">Business Hours</h3>
-            <div className="max-w-md mx-auto">
-              <div className="flex justify-between py-2 border-b border-purple-200">
-                <span className="text-gray-600">Monday - Saturday</span>
-                <span className="font-semibold">9:00 AM - 8:00 PM GST</span>
+            <h3 className="text-2xl font-serif font-bold text-[#1C0F00] mb-6">Business Hours</h3>
+            <div className="space-y-1">
+              <div className="flex justify-between py-3 border-b border-[#EAD7BB]">
+                <span className="text-[#8B4513]/60 text-sm">Monday – Saturday</span>
+                <span className="font-semibold text-[#1C0F00] text-sm">9:00 AM – 8:00 PM GST</span>
               </div>
-              <div className="flex justify-between py-2">
-                <span className="text-gray-600">Sunday</span>
-                <span className="font-semibold">10:00 AM - 6:00 PM GST</span>
+              <div className="flex justify-between py-3">
+                <span className="text-[#8B4513]/60 text-sm">Sunday</span>
+                <span className="font-semibold text-[#1C0F00] text-sm">10:00 AM – 6:00 PM GST</span>
               </div>
             </div>
-            <p className="text-sm text-gray-500 mt-4">
+            <p className="text-xs text-[#8B4513]/40 mt-4">
               WhatsApp messages are usually answered within minutes during business hours
             </p>
           </div>

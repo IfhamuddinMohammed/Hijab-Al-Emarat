@@ -83,11 +83,11 @@ const Cart = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-16 text-center">
-          <ShoppingBag className="w-24 h-24 text-gray-300 mx-auto mb-6" />
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">Your Cart is Empty</h1>
-          <p className="text-gray-600 mb-8">Add some beautiful pieces to your cart to get started</p>
+          <ShoppingBag className="w-20 h-20 text-[#D4AF37] mx-auto mb-6" />
+          <h1 className="text-3xl font-serif font-bold text-[#1C0F00] mb-4">Your Cart is Empty</h1>
+          <p className="text-[#8B4513]/60 mb-8">Add some beautiful pieces to your cart to get started</p>
           <Button
-            className="bg-purple-600 hover:bg-purple-700 text-white"
+            className="bg-[#1C0F00] hover:bg-[#D4AF37] hover:text-[#1C0F00] text-white rounded-none font-semibold tracking-wider uppercase text-sm transition-all duration-300 px-8 h-11"
             onClick={() => window.location.href = "/products"}
           >
             Continue Shopping
@@ -104,14 +104,14 @@ const Cart = () => {
       <Header />
       
       {/* Page Header */}
-      <section className="bg-purple-100 py-12">
+      <section className="bg-[#1C0F00] py-12">
         <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-bold text-purple-800 text-center mb-4">
+          <h1 className="text-4xl font-serif font-bold text-white text-center mb-4">
             {currentStep === "cart" && "Shopping Cart"}
             {currentStep === "address" && "Delivery Address"}
             {currentStep === "payment" && "Payment Method"}
           </h1>
-          <p className="text-gray-600 text-center">
+          <p className="text-white/50 text-center">
             {currentStep === "cart" && "Review your items and proceed to checkout"}
             {currentStep === "address" && "Enter your delivery address"}
             {currentStep === "payment" && "Choose your preferred payment method"}
@@ -147,7 +147,7 @@ const Cart = () => {
                           <p>Color: {item.color}</p>
                           <p>Size: {item.size}</p>
                         </div>
-                        <div className="text-2xl font-bold text-purple-800 mb-4">
+                        <div className="text-2xl font-bold text-[#D4AF37] mb-4">
                           ₹{item.price.toLocaleString()}
                         </div>
 
@@ -217,20 +217,20 @@ const Cart = () => {
                     <hr />
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
-                      <span className="text-purple-800">₹{total.toLocaleString()}</span>
+                      <span className="text-[#D4AF37]">₹{total.toLocaleString()}</span>
                     </div>
                   </div>
 
                   <Button
-                    className="w-full bg-purple-600 hover:bg-purple-700 text-white mb-4"
+                    className="w-full bg-[#1C0F00] hover:bg-[#D4AF37] hover:text-[#1C0F00] text-white rounded-none font-semibold tracking-wider uppercase text-sm transition-all duration-300 mb-4 h-11"
                     onClick={() => setCurrentStep("address")}
                   >
                     Proceed to Checkout
                   </Button>
 
-                  <div className="p-4 bg-purple-50 rounded-lg">
-                    <h3 className="font-semibold text-purple-800 mb-2">Payment Options:</h3>
-                    <ul className="text-sm text-purple-700 space-y-1">
+                  <div className="p-4 bg-[#FDF5E6] border border-[#EAD7BB]">
+                    <h3 className="font-semibold text-[#1C0F00] mb-2 text-sm">Payment Options:</h3>
+                    <ul className="text-sm text-[#8B4513]/70 space-y-1">
                       <li>• Cash on Delivery (COD)</li>
                       <li>• PhonePe & Google Pay</li>
                       <li>• WhatsApp for assistance</li>

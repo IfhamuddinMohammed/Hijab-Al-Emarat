@@ -17,6 +17,7 @@ const CATEGORIES = ["Hijabs", "Abayas", "Niqabs", "Accessories", "Modest Dresses
 const emptyForm = {
   name: "", description: "", price: "", originalPrice: "",
   stock_quantity: "", category: "", image_url: "", is_featured: false,
+  sizes: "", colors: "", material: "", care_instructions: "",
 };
 
 // ─── Settings field helpers ────────────────────────────────────────────────────
@@ -158,6 +159,10 @@ export default function Admin() {
       price: p.price.toString(), originalPrice: p.originalPrice.toString(),
       stock_quantity: p.stock_quantity.toString(),
       category: p.category, image_url: p.image_url, is_featured: p.is_featured,
+      sizes: (p.sizes ?? []).join(", "),
+      colors: (p.colors ?? []).join(", "),
+      material: p.material ?? "",
+      care_instructions: p.care_instructions ?? "",
     });
     setFormError(""); setShowForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -173,6 +178,10 @@ export default function Admin() {
       originalPrice: form.originalPrice ? parseFloat(form.originalPrice) : Math.round(parseFloat(form.price) * 1.6),
       stock_quantity: parseInt(form.stock_quantity),
       category: form.category, image_url: form.image_url.trim(), is_featured: form.is_featured,
+      sizes: form.sizes ? form.sizes.split(",").map(s => s.trim()).filter(Boolean) : undefined,
+      colors: form.colors ? form.colors.split(",").map(s => s.trim()).filter(Boolean) : undefined,
+      material: form.material.trim() || undefined,
+      care_instructions: form.care_instructions.trim() || undefined,
     };
     if (editingId) updateProduct(editingId, payload); else addProduct(payload);
     setShowForm(false); setEditingId(null); setForm(emptyForm);
@@ -320,10 +329,30 @@ export default function Admin() {
                     <Input type="number" value={form.stock_quantity} onChange={e => setForm(f => ({ ...f, stock_quantity: e.target.value }))}
                       placeholder="e.g. 50" className="rounded-none border-gray-200 focus:border-[#D4AF37] focus:ring-0 text-sm" />
                   </div>
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Image URL</label>
                     <Input value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
                       placeholder="https://res.cloudinary.com/..." className="rounded-none border-gray-200 focus:border-[#D4AF37] focus:ring-0 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Sizes <span className="font-normal normal-case text-gray-400">(comma-separated)</span></label>
+                    <Input value={form.sizes} onChange={e => setForm(f => ({ ...f, sizes: e.target.value }))}
+                      placeholder="Free Size, S, M, L, XL" className="rounded-none border-gray-200 focus:border-[#D4AF37] focus:ring-0 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Colors <span className="font-normal normal-case text-gray-400">(comma-separated)</span></label>
+                    <Input value={form.colors} onChange={e => setForm(f => ({ ...f, colors: e.target.value }))}
+                      placeholder="Black, Cream, Navy Blue, Olive" className="rounded-none border-gray-200 focus:border-[#D4AF37] focus:ring-0 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Material</label>
+                    <Input value={form.material} onChange={e => setForm(f => ({ ...f, material: e.target.value }))}
+                      placeholder="Premium Modal Cotton" className="rounded-none border-gray-200 focus:border-[#D4AF37] focus:ring-0 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Care Instructions</label>
+                    <Input value={form.care_instructions} onChange={e => setForm(f => ({ ...f, care_instructions: e.target.value }))}
+                      placeholder="Hand wash cold. Air dry. Do not bleach." className="rounded-none border-gray-200 focus:border-[#D4AF37] focus:ring-0 text-sm" />
                   </div>
                 </div>
 

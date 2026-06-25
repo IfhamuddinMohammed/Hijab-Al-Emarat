@@ -84,8 +84,8 @@ export const FeaturedProducts = () => {
                   />
                   <div className="absolute inset-0 bg-[#1C0F00]/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-6">
                     <button
-                      onClick={() => navigate("/products")}
-                      className="bg-white text-[#1C0F00] px-6 py-2 text-sm font-semibold tracking-wider uppercase transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
+                      onClick={() => navigate(`/products/${product.id}`)}
+                      className="bg-white text-[#1C0F00] px-6 py-2 text-sm font-semibold tracking-wider uppercase transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:bg-[#D4AF37] transition-colors"
                     >
                       View Details
                     </button>
@@ -94,7 +94,10 @@ export const FeaturedProducts = () => {
 
                 {/* Info */}
                 <div className="p-5">
-                  <h3 className="text-lg font-serif font-semibold text-[#1C0F00] mb-1 group-hover:text-[#8B4513] transition-colors line-clamp-1">
+                  <h3
+                    className="text-lg font-serif font-semibold text-[#1C0F00] mb-1 group-hover:text-[#8B4513] transition-colors line-clamp-1 cursor-pointer hover:text-[#D4AF37]"
+                    onClick={() => navigate(`/products/${product.id}`)}
+                  >
                     {product.name}
                   </h3>
                   {product.description && (

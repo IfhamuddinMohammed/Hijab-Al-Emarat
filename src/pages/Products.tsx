@@ -34,6 +34,8 @@ const Products = () => {
   useEffect(() => {
     const cat = searchParams.get("category");
     if (cat) setSelectedCategory(cat.toLowerCase());
+    const q = searchParams.get("q");
+    if (q) setSearchQuery(q);
   }, [searchParams]);
 
   // Unique categories from actual products
@@ -144,8 +146,11 @@ const Products = () => {
                   key={product.id}
                   className="bg-white border border-[#EAD7BB] hover:border-[#D4AF37] hover:shadow-[0_8px_32px_rgba(212,175,55,0.15)] transition-all duration-300 overflow-hidden group"
                 >
-                  {/* Image */}
-                  <div className="relative aspect-[3/4] overflow-hidden bg-[#FDF5E6]">
+                  {/* Image — click → detail page */}
+                  <div
+                    className="relative aspect-[3/4] overflow-hidden bg-[#FDF5E6] cursor-pointer"
+                    onClick={() => navigate(`/products/${product.id}`)}
+                  >
                     <img
                       src={product.image_url || "https://res.cloudinary.com/df4autxjg/image/upload/v1751638933/ROYAL_BLACK_ABAYA_hrx8kd.png"}
                       alt={product.name}
@@ -170,12 +175,20 @@ const Products = () => {
                       </div>
                     )}
                     <div className="absolute inset-0 bg-[#1C0F00]/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
-                      <button
-                        onClick={() => handleAddToCart(product)}
-                        className="bg-white text-[#1C0F00] text-xs font-bold px-5 py-2 uppercase tracking-wider transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
-                      >
-                        Add to Cart
-                      </button>
+                      <div className="flex gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                        <button
+                          onClick={e => { e.stopPropagation(); handleAddToCart(product); }}
+                          className="bg-white text-[#1C0F00] text-xs font-bold px-4 py-2 uppercase tracking-wider hover:bg-[#D4AF37] transition-colors"
+                        >
+                          Add to Cart
+                        </button>
+                        <button
+                          onClick={e => { e.stopPropagation(); navigate(`/products/${product.id}`); }}
+                          className="bg-[#1C0F00] text-white text-xs font-bold px-4 py-2 uppercase tracking-wider hover:bg-[#D4AF37] hover:text-[#1C0F00] transition-colors"
+                        >
+                          View
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -184,7 +197,10 @@ const Products = () => {
                     <p className="text-[#D4AF37] text-[10px] font-semibold tracking-widest uppercase mb-1">
                       {product.category || "Collection"}
                     </p>
-                    <h3 className="font-serif text-base font-semibold text-[#1C0F00] mb-1 line-clamp-1 group-hover:text-[#8B4513] transition-colors">
+                    <h3
+                      className="font-serif text-base font-semibold text-[#1C0F00] mb-1 line-clamp-1 group-hover:text-[#8B4513] transition-colors cursor-pointer hover:text-[#D4AF37]"
+                      onClick={() => navigate(`/products/${product.id}`)}
+                    >
                       {product.name}
                     </h3>
                     {product.description && (

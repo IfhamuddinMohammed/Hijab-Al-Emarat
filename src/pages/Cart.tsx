@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import {
   Minus, Plus, Trash2, ShoppingBag, ArrowRight,
   MapPin, Navigation, MessageCircle, Truck, Smartphone, Copy, CheckCircle2,
-  Shield, Lock, Phone, Tag, X
+  Shield, Lock, Phone, Tag, X, ChevronDown, ChevronUp, Gift
 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
@@ -36,7 +36,7 @@ const STEPS: { id: Step; label: string }[] = [
 const Cart = () => {
   const { cartItems, removeFromCart, updateQuantity, clearCart, cartTotal } = useCart();
   const { settings } = useSiteSettings();
-  const { validateCoupon, calcDiscount } = useCoupons();
+  const { coupons, validateCoupon, calcDiscount } = useCoupons();
   const navigate = useNavigate();
 
   const [step, setStep] = useState<Step>("cart");
@@ -51,6 +51,10 @@ const Cart = () => {
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [couponError, setCouponError] = useState("");
   const [couponApplying, setCouponApplying] = useState(false);
+  const [showCouponList, setShowCouponList] = useState(false);
+
+  // Public coupons (active ones visible to customers)
+  const publicCoupons = coupons.filter(c => c.active);
 
   const sym = settings.currencySymbol;
   const baseShipping = cartTotal > 5000 ? 0 : 299;
@@ -87,13 +91,25 @@ const Cart = () => {
         setAppliedCoupon(result.coupon);
         setCouponInput("");
         setCouponError("");
+        setShowCouponList(false);
       } else {
         setCouponError(result.error || "Invalid code");
       }
     }, 400);
   };
 
-  const removeCoupon = () => { setAppliedCoupon(null); setCouponError(""); setCouponInput(""); };
+  const applyDirectCoupon = (c: Coupon) => {
+    const result = validateCoupon(c.code, cartTotal);
+    if (result.valid && result.coupon) {
+      setAppliedCoupon(result.coupon);
+      setCouponError("");
+      setShowCouponList(false);
+    } else {
+      setCouponError(result.error || "Cannot apply this coupon");
+    }
+  };
+
+  const removeCoupon = () => { setAppliedCoupon(null); setCouponError(""); setCouponInput(""); setShowCouponList(false); };
 
   const buildOrderMessage = (method: string) => {
     const lines = cartItems.map(i =>
@@ -227,31 +243,84 @@ const Cart = () => {
                 <div className="bg-white border border-[#EAD7BB] p-5 sticky top-24 space-y-4">
                   <h2 className="font-serif font-bold text-[#1C0F00] text-lg pb-3 border-b border-[#EAD7BB]">Order Summary</h2>
 
-                  {/* Coupon input */}
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5">
-                      <Tag className="w-3 h-3" /> Coupon Code
-                    </p>
+                  {/* Coupon section */}
+                  <div className="border border-[#EAD7BB]">
                     {appliedCoupon ? (
-                      <div className="flex items-center gap-2 bg-green-50 border border-green-200 px-3 py-2">
+                      /* ── Coupon applied ── */
+                      <div className="flex items-center gap-2 bg-green-50 px-3 py-2.5">
                         <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-green-700 text-xs">{appliedCoupon.code}</p>
+                          <p className="font-bold text-green-700 text-xs">{appliedCoupon.code} applied!</p>
                           <p className="text-[10px] text-green-600">{appliedCoupon.description}</p>
                         </div>
-                        <button onClick={removeCoupon} className="text-green-400 hover:text-red-400 transition-colors flex-shrink-0">
+                        <button onClick={removeCoupon} className="text-green-400 hover:text-red-400 transition-colors flex-shrink-0" title="Remove coupon">
                           <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     ) : (
-                      <div>
-                        <div className="flex gap-0">
+                      <>
+                        {/* ── View coupons toggle ── */}
+                        {publicCoupons.length > 0 && (
+                          <button
+                            onClick={() => setShowCouponList(o => !o)}
+                            className="w-full flex items-center justify-between px-3 py-2.5 text-xs hover:bg-[#FDF5E6] transition-colors"
+                          >
+                            <span className="flex items-center gap-2 font-semibold text-[#1C0F00]">
+                              <Gift className="w-3.5 h-3.5 text-[#D4AF37]" />
+                              View {publicCoupons.length} available offer{publicCoupons.length > 1 ? "s" : ""}
+                            </span>
+                            {showCouponList ? <ChevronUp className="w-3.5 h-3.5 text-[#8B4513]/50" /> : <ChevronDown className="w-3.5 h-3.5 text-[#8B4513]/50" />}
+                          </button>
+                        )}
+
+                        {/* ── Coupon list ── */}
+                        {showCouponList && (
+                          <div className="border-t border-[#EAD7BB] bg-[#FDF5E6] divide-y divide-[#EAD7BB]">
+                            {publicCoupons.map(c => {
+                              const eligible = cartTotal >= c.minOrder;
+                              return (
+                                <div key={c.id} className={`flex items-center justify-between px-3 py-2.5 gap-3 ${!eligible ? "opacity-50" : ""}`}>
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="font-mono font-bold text-[#1C0F00] text-[11px] bg-white border border-[#EAD7BB] px-1.5 py-0.5 tracking-wider">{c.code}</span>
+                                      {c.type === "percent" && <span className="text-[10px] font-bold text-[#D4AF37]">{c.value}% off</span>}
+                                      {c.type === "flat" && <span className="text-[10px] font-bold text-[#D4AF37]">{sym}{c.value} off</span>}
+                                      {c.type === "freeship" && <span className="text-[10px] font-bold text-blue-500">Free shipping</span>}
+                                    </div>
+                                    <p className="text-[10px] text-[#8B4513]/60 mt-0.5">
+                                      {c.description || (c.minOrder > 0 ? `Min order ${sym}${c.minOrder.toLocaleString()}` : "No minimum")}
+                                    </p>
+                                    {!eligible && c.minOrder > 0 && (
+                                      <p className="text-[10px] text-amber-600 mt-0.5">
+                                        Add {sym}{(c.minOrder - cartTotal).toLocaleString()} more to unlock
+                                      </p>
+                                    )}
+                                  </div>
+                                  <button
+                                    onClick={() => eligible && applyDirectCoupon(c)}
+                                    disabled={!eligible}
+                                    className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 flex-shrink-0 transition-all ${
+                                      eligible
+                                        ? "bg-[#1C0F00] hover:bg-[#D4AF37] hover:text-[#1C0F00] text-white"
+                                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                    }`}
+                                  >
+                                    Apply
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* ── Manual code entry ── */}
+                        <div className={`flex gap-0 ${publicCoupons.length > 0 ? "border-t border-[#EAD7BB]" : ""}`}>
                           <Input
                             value={couponInput}
                             onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponError(""); }}
                             onKeyDown={e => e.key === "Enter" && applyCoupon()}
-                            placeholder="Enter code e.g. HIJABFIRST"
-                            className="rounded-none border-[#EAD7BB] focus:border-[#D4AF37] focus:ring-0 text-xs uppercase h-9 flex-1 font-mono tracking-wider"
+                            placeholder="Have a private code? Enter it"
+                            className="rounded-none border-0 focus:border-0 focus:ring-0 text-xs uppercase h-9 flex-1 font-mono tracking-wider bg-white"
                           />
                           <button
                             onClick={applyCoupon}
@@ -262,11 +331,11 @@ const Cart = () => {
                           </button>
                         </div>
                         {couponError && (
-                          <p className="text-red-500 text-[11px] mt-1 flex items-center gap-1">
-                            <X className="w-3 h-3" />{couponError}
+                          <p className="text-red-500 text-[11px] px-3 pb-2 flex items-center gap-1">
+                            <X className="w-3 h-3 flex-shrink-0" />{couponError}
                           </p>
                         )}
-                      </div>
+                      </>
                     )}
                   </div>
 

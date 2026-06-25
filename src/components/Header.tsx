@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ShoppingBag, Menu, X, Heart, Search } from "lucide-react";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +10,9 @@ import { useWishlist } from "@/contexts/WishlistContext";
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { settings } = useSiteSettings();
   const { cartCount } = useCart();
@@ -20,6 +23,26 @@ export const Header = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (searchOpen) setTimeout(() => searchRef.current?.focus(), 80);
+  }, [searchOpen]);
+
+  // Close search on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") { setSearchOpen(false); setSearchQuery(""); } };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
+
+  const handleSearch = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/products?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery("");
+      setSearchOpen(false);
+    }
+  };
 
   const menuItems = [
     { name: "Home", path: "/" },
@@ -40,18 +63,11 @@ export const Header = () => {
       )}
 
       {/* Main Header */}
-      <header
-        className={`bg-white transition-all duration-300 ${
-          isScrolled ? "shadow-md border-b border-[#EAD7BB]" : "border-b border-[#F0E8D8]"
-        }`}
-      >
+      <header className={`bg-white transition-all duration-300 ${isScrolled ? "shadow-md border-b border-[#EAD7BB]" : "border-b border-[#F0E8D8]"}`}>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
-            <button
-              onClick={() => navigate("/")}
-              className="flex flex-col items-start group"
-            >
+            <button onClick={() => navigate("/")} className="flex flex-col items-start group">
               <span className="text-xl md:text-2xl font-serif font-bold text-[#1C0F00] leading-tight group-hover:text-[#D4AF37] transition-colors duration-300">
                 {settings.storeName}
               </span>
@@ -63,34 +79,24 @@ export const Header = () => {
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
               {menuItems.map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => navigate(item.path)}
-                  className="text-[#3D2B1F] hover:text-[#D4AF37] transition-colors duration-200 font-medium text-sm tracking-wide relative group"
-                >
+                <button key={item.name} onClick={() => navigate(item.path)}
+                  className="text-[#3D2B1F] hover:text-[#D4AF37] transition-colors duration-200 font-medium text-sm tracking-wide relative group">
                   {item.name}
-                  <span className="absolute -bottom-1 left-0 w-0 h-[1.5px] bg-[#D4AF37] group-hover:w-full transition-all duration-300"></span>
+                  <span className="absolute -bottom-1 left-0 w-0 h-[1.5px] bg-[#D4AF37] group-hover:w-full transition-all duration-300" />
                 </button>
               ))}
             </nav>
 
             {/* Icons */}
             <div className="flex items-center space-x-1 md:space-x-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-[#3D2B1F] hover:text-[#D4AF37] hover:bg-[#FDF5E6]"
-                onClick={() => navigate("/products")}
-              >
-                <Search className="h-5 w-5" />
+              <Button variant="ghost" size="icon"
+                className={`transition-colors ${searchOpen ? "text-[#D4AF37] bg-[#FDF5E6]" : "text-[#3D2B1F] hover:text-[#D4AF37] hover:bg-[#FDF5E6]"}`}
+                onClick={() => { setSearchOpen(o => !o); if (searchOpen) setSearchQuery(""); }}>
+                {searchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
               </Button>
 
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/wishlist")}
-                className="relative text-[#3D2B1F] hover:text-[#D4AF37] hover:bg-[#FDF5E6]"
-              >
+              <Button variant="ghost" size="icon" onClick={() => navigate("/wishlist")}
+                className="relative text-[#3D2B1F] hover:text-[#D4AF37] hover:bg-[#FDF5E6]">
                 <Heart className="h-5 w-5" />
                 {wishlistCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-[#D4AF37] text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
@@ -99,12 +105,8 @@ export const Header = () => {
                 )}
               </Button>
 
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/cart")}
-                className="relative text-[#3D2B1F] hover:text-[#D4AF37] hover:bg-[#FDF5E6]"
-              >
+              <Button variant="ghost" size="icon" onClick={() => navigate("/cart")}
+                className="relative text-[#3D2B1F] hover:text-[#D4AF37] hover:bg-[#FDF5E6]">
                 <ShoppingBag className="h-5 w-5" />
                 {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-[#1C0F00] text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
@@ -113,13 +115,8 @@ export const Header = () => {
                 )}
               </Button>
 
-              {/* Mobile Menu Button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="md:hidden text-[#3D2B1F]"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-              >
+              <Button variant="ghost" size="icon" className="md:hidden text-[#3D2B1F]"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}>
                 {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
             </div>
@@ -130,14 +127,9 @@ export const Header = () => {
             <div className="md:hidden py-4 border-t border-[#EAD7BB] bg-white">
               <nav className="flex flex-col space-y-1">
                 {menuItems.map((item) => (
-                  <button
-                    key={item.name}
-                    onClick={() => {
-                      navigate(item.path);
-                      setIsMenuOpen(false);
-                    }}
-                    className="text-[#3D2B1F] hover:text-[#D4AF37] hover:bg-[#FDF5E6] transition-colors font-medium text-left px-3 py-2.5 rounded-md"
-                  >
+                  <button key={item.name}
+                    onClick={() => { navigate(item.path); setIsMenuOpen(false); }}
+                    className="text-[#3D2B1F] hover:text-[#D4AF37] hover:bg-[#FDF5E6] transition-colors font-medium text-left px-3 py-2.5 rounded-md">
                     {item.name}
                   </button>
                 ))}
@@ -147,8 +139,37 @@ export const Header = () => {
         </div>
 
         {/* Gold accent line */}
-        <div className="h-[2px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60"></div>
+        <div className="h-[2px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60" />
       </header>
+
+      {/* ── Search bar — drops below header, does NOT replace it ── */}
+      <div className={`bg-white border-b border-[#EAD7BB] shadow-lg transition-all duration-300 overflow-hidden ${searchOpen ? "max-h-20 opacity-100" : "max-h-0 opacity-0 pointer-events-none"}`}>
+        <form onSubmit={handleSearch} className="container mx-auto px-4 py-3 flex items-center gap-3">
+          <Search className="w-4 h-4 text-[#D4AF37] flex-shrink-0" />
+          <input
+            ref={searchRef}
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search hijabs, abayas, accessories…"
+            className="flex-1 bg-transparent text-[#1C0F00] placeholder:text-[#8B4513]/40 text-sm focus:outline-none"
+          />
+          {searchQuery && (
+            <button type="button" onClick={() => setSearchQuery("")}
+              className="text-[#8B4513]/40 hover:text-[#8B4513] transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          )}
+          <button type="submit"
+            className="bg-[#1C0F00] hover:bg-[#D4AF37] hover:text-[#1C0F00] text-white px-5 h-9 text-xs font-bold uppercase tracking-wider transition-all flex-shrink-0">
+            Search
+          </button>
+        </form>
+      </div>
+
+      {/* Backdrop — clicking outside closes search */}
+      {searchOpen && (
+        <div className="fixed inset-0 z-[-1]" onClick={() => { setSearchOpen(false); setSearchQuery(""); }} />
+      )}
     </div>
   );
 };

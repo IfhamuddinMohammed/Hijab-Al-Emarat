@@ -6,15 +6,24 @@ import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Star, ShoppingBag, Heart, Search } from "lucide-react";
+import { Star, ShoppingBag, Heart, Search, MessageCircle } from "lucide-react";
 import { useProducts } from "@/contexts/ProductsContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
+import { useCart } from "@/contexts/CartContext";
 
 const Products = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { products } = useProducts();
   const { settings } = useSiteSettings();
+  const { addToCart } = useCart();
+  const [added, setAdded] = useState<string | null>(null);
+
+  const handleAddToCart = (product: typeof products[0]) => {
+    addToCart(product);
+    setAdded(product.id);
+    setTimeout(() => setAdded(null), 1500);
+  };
 
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("featured");
@@ -160,10 +169,10 @@ const Products = () => {
                     )}
                     <div className="absolute inset-0 bg-[#1C0F00]/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
                       <button
-                        onClick={() => handleWhatsApp(product)}
+                        onClick={() => handleAddToCart(product)}
                         className="bg-white text-[#1C0F00] text-xs font-bold px-5 py-2 uppercase tracking-wider transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
                       >
-                        Quick Order
+                        Add to Cart
                       </button>
                     </div>
                   </div>
@@ -198,15 +207,24 @@ const Products = () => {
                     <div className="flex gap-2">
                       <Button
                         disabled={product.stock_quantity === 0}
-                        className="flex-1 bg-[#1C0F00] hover:bg-[#D4AF37] hover:text-[#1C0F00] text-white rounded-none text-xs font-bold uppercase tracking-wider h-9 transition-all duration-300 disabled:opacity-40"
-                        onClick={() => handleWhatsApp(product)}
+                        className={`flex-1 rounded-none text-xs font-bold uppercase tracking-wider h-9 transition-all duration-300 disabled:opacity-40 ${
+                          added === product.id
+                            ? "bg-green-600 hover:bg-green-600 text-white"
+                            : "bg-[#1C0F00] hover:bg-[#D4AF37] hover:text-[#1C0F00] text-white"
+                        }`}
+                        onClick={() => handleAddToCart(product)}
                       >
                         <ShoppingBag className="w-3.5 h-3.5 mr-1.5" />
-                        Order
+                        {added === product.id ? "Added!" : "Add to Cart"}
                       </Button>
-                      <Button variant="outline" size="icon"
-                        className="border-[#EAD7BB] hover:border-[#D4AF37] rounded-none h-9 w-9 flex-shrink-0">
-                        <Heart className="w-3.5 h-3.5 text-[#8B4513]" />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        title="Quick WhatsApp enquiry"
+                        className="border-[#EAD7BB] hover:border-green-500 hover:bg-green-50 hover:text-green-600 rounded-none h-9 w-9 flex-shrink-0"
+                        onClick={() => handleWhatsApp(product)}
+                      >
+                        <MessageCircle className="w-3.5 h-3.5 text-[#8B4513]" />
                       </Button>
                     </div>
                   </div>

@@ -4,12 +4,14 @@ import { ShoppingBag, Menu, X, Heart, Search } from "lucide-react";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
+import { useCart } from "@/contexts/CartContext";
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
   const { settings } = useSiteSettings();
+  const { cartCount } = useCart();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -100,9 +102,11 @@ export const Header = () => {
                 className="relative text-[#3D2B1F] hover:text-[#D4AF37] hover:bg-[#FDF5E6]"
               >
                 <ShoppingBag className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 bg-[#1C0F00] text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
-                  0
-                </span>
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[#1C0F00] text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                    {cartCount > 9 ? "9+" : cartCount}
+                  </span>
+                )}
               </Button>
 
               {/* Mobile Menu Button */}

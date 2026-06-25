@@ -1,9 +1,11 @@
 
+import { useState } from "react";
 import { Button } from "./ui/button";
-import { Star, Heart, ArrowRight } from "lucide-react";
+import { Star, Heart, ArrowRight, ShoppingBag, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProducts } from "@/contexts/ProductsContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
+import { useCart } from "@/contexts/CartContext";
 
 const BADGE_COLORS = ["bg-[#D4AF37]", "bg-[#8B4513]", "bg-[#1C0F00]", "bg-[#D4AF37]", "bg-[#8B4513]", "bg-[#1C0F00]"];
 
@@ -11,9 +13,17 @@ export const FeaturedProducts = () => {
   const navigate = useNavigate();
   const { getFeatured } = useProducts();
   const { settings } = useSiteSettings();
+  const { addToCart } = useCart();
   const featured = getFeatured();
+  const [added, setAdded] = useState<string | null>(null);
 
-  const handleWhatsAppOrder = (product: { name: string; price: number }) => {
+  const handleAddToCart = (product: Parameters<typeof addToCart>[0]) => {
+    addToCart(product);
+    setAdded(product.id);
+    setTimeout(() => setAdded(null), 1500);
+  };
+
+  const handleWhatsApp = (product: { name: string; price: number }) => {
     const message = `Hi! I'm interested in the ${product.name} (${settings.currencySymbol}${product.price.toLocaleString()}). Can you please provide more details?`;
     window.open(`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(message)}`, "_blank");
   };
@@ -113,17 +123,24 @@ export const FeaturedProducts = () => {
 
                   <div className="flex gap-2">
                     <Button
-                      className="flex-1 bg-[#1C0F00] hover:bg-[#D4AF37] text-white hover:text-[#1C0F00] text-xs tracking-wider font-semibold uppercase transition-all duration-300 rounded-none h-10"
-                      onClick={() => handleWhatsAppOrder(product)}
+                      className={`flex-1 text-xs tracking-wider font-semibold uppercase transition-all duration-300 rounded-none h-10 ${
+                        added === product.id
+                          ? "bg-green-600 hover:bg-green-600 text-white"
+                          : "bg-[#1C0F00] hover:bg-[#D4AF37] text-white hover:text-[#1C0F00]"
+                      }`}
+                      onClick={() => handleAddToCart(product)}
                     >
-                      WhatsApp Order
+                      <ShoppingBag className="w-3.5 h-3.5 mr-1.5" />
+                      {added === product.id ? "Added!" : "Add to Cart"}
                     </Button>
                     <Button
                       variant="outline"
                       size="icon"
-                      className="border-[#EAD7BB] hover:border-[#D4AF37] hover:bg-[#FDF5E6] text-[#8B4513] rounded-none h-10 w-10 flex-shrink-0"
+                      title="Quick WhatsApp enquiry"
+                      className="border-[#EAD7BB] hover:border-green-500 hover:bg-green-50 text-[#8B4513] hover:text-green-600 rounded-none h-10 w-10 flex-shrink-0"
+                      onClick={() => handleWhatsApp(product)}
                     >
-                      <Heart className="w-4 h-4" />
+                      <MessageCircle className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>

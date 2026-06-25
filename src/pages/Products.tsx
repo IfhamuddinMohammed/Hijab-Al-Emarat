@@ -1,165 +1,219 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { ProductBadges } from "@/components/ProductBadges";
-import { SizeChartModal } from "@/components/SizeChartModal";
-import { ProductImageZoom } from "@/components/ProductImageZoom";
-import { Star, Filter, ShoppingBag, Heart, Search, TrendingUp, Tag } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Star, ShoppingBag, Heart, Search } from "lucide-react";
+import { useProducts } from "@/contexts/ProductsContext";
+import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 
 const Products = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { products } = useProducts();
+  const { settings } = useSiteSettings();
+
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("featured");
   const [searchQuery, setSearchQuery] = useState("");
-  const [priceRange, setPriceRange] = useState("all");
 
   useEffect(() => {
-    const categoryFromUrl = searchParams.get("category");
-    if (categoryFromUrl) {
-      setSelectedCategory(categoryFromUrl);
-    }
+    const cat = searchParams.get("category");
+    if (cat) setSelectedCategory(cat.toLowerCase());
   }, [searchParams]);
 
-  const products = [
-    {
-      id: 1,
-      name: "Royal Black Abaya",
-      price: "₹4,999",
-      originalPrice: "₹6,999",
-      category: "abayas",
-      images: [
-        "https://res.cloudinary.com/df4autxjg/image/upload/v1751634671/hjb2_teldey.jpg",
-        "https://res.cloudinary.com/df4autxjg/image/upload/v1751634770/Hjb1_bsiwjl.jpg"
-      ],
-      rating: 4.8,
-      reviews: 24000,
-      sizes: ["S", "M", "L", "XL"],
-      colors: ["Black", "Navy", "Brown"],
-      badges: ["Bestseller", "Premium"],
-      fabricFeatures: ["Breathable", "Wrinkle-free"],
-      fabric: "Premium Nida",
-      inStock: true,
-      isNew: false,
-      isTrending: true
-    }
-  ];
+  // Unique categories from actual products
+  const categories = ["all", ...Array.from(new Set(products.map(p => p.category).filter(Boolean)))];
 
-  const pageHeaderStyle = {
-    backgroundImage: "linear-gradient(to right, #fdf6ec, #fffaf4)",
-    borderBottom: "1px solid #f3e6d2",
+  const filtered = products
+    .filter((p) => {
+      const matchCat = selectedCategory === "all" || p.category?.toLowerCase() === selectedCategory.toLowerCase();
+      const matchSearch = !searchQuery ||
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+      return matchCat && matchSearch;
+    })
+    .sort((a, b) => {
+      if (sortBy === "price-low") return a.price - b.price;
+      if (sortBy === "price-high") return b.price - a.price;
+      if (sortBy === "featured") return (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0);
+      return 0;
+    });
+
+  const pageTitle = selectedCategory === "all"
+    ? "Our Collection"
+    : selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1) + " Collection";
+
+  const handleWhatsApp = (p: { name: string; price: number }) => {
+    const msg = `Hi! I'm interested in the ${p.name} (${settings.currencySymbol}${p.price.toLocaleString()}). Can you help me?`;
+    window.open(`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFCF7] font-sans">
+    <div className="min-h-screen bg-[#FDF5E6]">
       <Header />
 
-      {/* Elegant Page Header */}
-      <section className="py-16 relative" style={pageHeaderStyle}>
-        <div className="container mx-auto px-4 relative z-10">
-          <h1 className="text-5xl md:text-6xl font-serif font-bold text-[#A3702B] text-center mb-4">
-            {selectedCategory === "all"
-              ? "Our Collection"
-              : selectedCategory === "hijabs"
-              ? "Hijabs Collection"
-              : selectedCategory === "abayas"
-              ? "Abayas Collection"
-              : selectedCategory === "scarves"
-              ? "Scarves Collection"
-              : "Our Collection"}
-          </h1>
-          <p className="text-[#997A44] text-xl text-center max-w-3xl mx-auto leading-relaxed">
-            {selectedCategory === "hijabs"
-              ? "Premium hijabs sourced directly from Dubai's finest fashion houses"
-              : "Discover our complete range of premium modest fashion sourced directly from Dubai's finest fashion houses"}
-          </p>
-        </div>
-      </section>
-
-      {/* Enhanced Filters */}
-      <section className="py-8 bg-[#FFF8F0] border-t border-b border-[#f3e6d2]">
-        <div className="container mx-auto px-4">
-          {/* filters unchanged */}
-        </div>
-      </section>
-
-      {/* Elegant Product Grid */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-            {products.map(product => (
-              <div
-                key={product.id}
-                className="relative bg-white rounded-2xl border border-[#EAD7BB] shadow-[0_8px_24px_rgba(173,144,102,0.15)] hover:shadow-[0_12px_32px_rgba(173,144,102,0.25)] transition-all overflow-hidden group"
-              >
-                <div className="relative overflow-hidden">
-                  <ProductImageZoom images={product.images} productName={product.name} />
-                  {product.isNew && (
-                    <span className="absolute top-3 left-3 bg-[#d4af37] text-white px-2 py-1 text-xs rounded-full font-semibold">
-                      NEW
-                    </span>
-                  )}
-                  {product.isTrending && (
-                    <span className="absolute top-3 right-3 bg-[#A3702B] text-white px-2 py-1 text-xs rounded-full font-semibold">
-                      TRENDING
-                    </span>
-                  )}
-
-                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <span className="text-white text-sm bg-[#A3702B] px-4 py-2 rounded-full font-semibold">
-                      View Details
-                    </span>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-serif text-lg font-semibold text-[#4D3B2F] mb-2 group-hover:text-[#A3702B] transition-colors">
-                    {product.name}
-                  </h3>
-                  <ProductBadges badges={product.badges} fabricFeatures={product.fabricFeatures} />
-                  <div className="flex items-center gap-2 my-2">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-4 h-4 ${
-                          i < Math.floor(product.rating)
-                            ? "text-[#d4af37] fill-current"
-                            : "text-[#EAD7BB]"
-                        }`}
-                      />
-                    ))}
-                    <span className="text-sm text-[#A3702B] font-medium">
-                      {product.rating} ({product.reviews})
-                    </span>
-                  </div>
-                  <p className="text-sm text-[#7D5A3A] mb-1">
-                    <strong>Fabric:</strong> {product.fabric}
-                  </p>
-                  <p className="text-sm text-[#7D5A3A] mb-1">
-                    <strong>Colors:</strong> {product.colors.join(", ")}
-                  </p>
-                  <p className="text-sm text-[#7D5A3A] mb-4">
-                    <strong>Sizes:</strong> {product.sizes.join(", ")}
-                  </p>
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="text-xl font-bold text-[#A3702B]">
-                      {product.price}
-                    </span>
-                    <span className="text-sm text-[#C0A375] line-through">
-                      {product.originalPrice}
-                    </span>
-                  </div>
-                  <SizeChartModal />
-                  <Button className="w-full mt-2 bg-[#A3702B] hover:bg-[#8e5d1f] text-white">
-                    <ShoppingBag className="w-4 h-4 mr-2" /> Add to Cart
-                  </Button>
-                </div>
-              </div>
-            ))}
+      {/* Page Header */}
+      <section className="py-14 bg-[#1C0F00] relative">
+        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60" />
+        <div className="container mx-auto px-4 text-center">
+          <div className="inline-flex items-center gap-3 mb-3">
+            <div className="h-[1px] w-10 bg-[#D4AF37]" />
+            <span className="text-[#D4AF37] text-xs tracking-[0.3em] font-medium uppercase">Dubai Collection</span>
+            <div className="h-[1px] w-10 bg-[#D4AF37]" />
           </div>
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-white mb-2">{pageTitle}</h1>
+          <p className="text-white/40 text-sm mt-2">{filtered.length} item{filtered.length !== 1 ? "s" : ""} found</p>
+        </div>
+      </section>
+
+      {/* Filters */}
+      <section className="py-4 bg-white border-b border-[#EAD7BB] sticky top-[88px] z-30">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col sm:flex-row gap-3 items-center flex-wrap">
+            {/* Search */}
+            <div className="relative flex-1 min-w-[200px] max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8B4513]/40" />
+              <Input
+                placeholder="Search products…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 rounded-none border-[#EAD7BB] focus:border-[#D4AF37] focus:ring-0 text-sm h-9"
+              />
+            </div>
+
+            {/* Category pills */}
+            <div className="flex flex-wrap gap-1.5">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all duration-200 ${
+                    selectedCategory === cat
+                      ? "bg-[#1C0F00] text-white"
+                      : "bg-white border border-[#EAD7BB] text-[#8B4513] hover:border-[#D4AF37]"
+                  }`}
+                >
+                  {cat === "all" ? "All" : cat}
+                </button>
+              ))}
+            </div>
+
+            {/* Sort */}
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-40 rounded-none border-[#EAD7BB] h-9 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="featured">Featured First</SelectItem>
+                <SelectItem value="price-low">Price: Low → High</SelectItem>
+                <SelectItem value="price-high">Price: High → Low</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </section>
+
+      {/* Grid */}
+      <section className="py-10">
+        <div className="container mx-auto px-4">
+          {filtered.length === 0 ? (
+            <div className="text-center py-24">
+              <p className="text-[#8B4513]/50 text-lg font-serif">No products found.</p>
+              <button onClick={() => { setSelectedCategory("all"); setSearchQuery(""); }}
+                className="mt-4 text-[#D4AF37] text-sm underline">Clear filters</button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+              {filtered.map((product) => (
+                <div
+                  key={product.id}
+                  className="bg-white border border-[#EAD7BB] hover:border-[#D4AF37] hover:shadow-[0_8px_32px_rgba(212,175,55,0.15)] transition-all duration-300 overflow-hidden group"
+                >
+                  {/* Image */}
+                  <div className="relative aspect-[3/4] overflow-hidden bg-[#FDF5E6]">
+                    <img
+                      src={product.image_url || "https://res.cloudinary.com/df4autxjg/image/upload/v1751638933/ROYAL_BLACK_ABAYA_hrx8kd.png"}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "https://res.cloudinary.com/df4autxjg/image/upload/v1751638933/ROYAL_BLACK_ABAYA_hrx8kd.png";
+                      }}
+                    />
+                    {product.is_featured && (
+                      <span className="absolute top-3 left-3 bg-[#D4AF37] text-white text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider">
+                        Featured
+                      </span>
+                    )}
+                    {product.stock_quantity < 10 && product.stock_quantity > 0 && (
+                      <span className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 uppercase">
+                        Low Stock
+                      </span>
+                    )}
+                    {product.stock_quantity === 0 && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <span className="text-white font-semibold text-sm tracking-wider uppercase">Out of Stock</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-[#1C0F00]/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
+                      <button
+                        onClick={() => handleWhatsApp(product)}
+                        className="bg-white text-[#1C0F00] text-xs font-bold px-5 py-2 uppercase tracking-wider transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
+                      >
+                        Quick Order
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Details */}
+                  <div className="p-4">
+                    <p className="text-[#D4AF37] text-[10px] font-semibold tracking-widest uppercase mb-1">
+                      {product.category || "Collection"}
+                    </p>
+                    <h3 className="font-serif text-base font-semibold text-[#1C0F00] mb-1 line-clamp-1 group-hover:text-[#8B4513] transition-colors">
+                      {product.name}
+                    </h3>
+                    {product.description && (
+                      <p className="text-xs text-[#8B4513]/50 mb-2 line-clamp-1">{product.description}</p>
+                    )}
+
+                    <div className="flex items-center gap-0.5 mb-3">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="w-3 h-3 text-[#D4AF37] fill-current" />
+                      ))}
+                    </div>
+
+                    <div className="flex items-baseline gap-2 mb-4">
+                      <span className="text-lg font-bold text-[#D4AF37]">{settings.currencySymbol}{product.price.toLocaleString()}</span>
+                      {product.originalPrice > product.price && (
+                        <span className="text-xs text-[#8B4513]/40 line-through">{settings.currencySymbol}{product.originalPrice.toLocaleString()}</span>
+                      )}
+                    </div>
+
+                    <div className="h-[1px] bg-gradient-to-r from-[#D4AF37]/30 to-transparent mb-3" />
+
+                    <div className="flex gap-2">
+                      <Button
+                        disabled={product.stock_quantity === 0}
+                        className="flex-1 bg-[#1C0F00] hover:bg-[#D4AF37] hover:text-[#1C0F00] text-white rounded-none text-xs font-bold uppercase tracking-wider h-9 transition-all duration-300 disabled:opacity-40"
+                        onClick={() => handleWhatsApp(product)}
+                      >
+                        <ShoppingBag className="w-3.5 h-3.5 mr-1.5" />
+                        Order
+                      </Button>
+                      <Button variant="outline" size="icon"
+                        className="border-[#EAD7BB] hover:border-[#D4AF37] rounded-none h-9 w-9 flex-shrink-0">
+                        <Heart className="w-3.5 h-3.5 text-[#8B4513]" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

@@ -1,140 +1,145 @@
 
 import { Button } from "./ui/button";
-import { Star } from "lucide-react";
+import { Star, Heart, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useProducts } from "@/contexts/ProductsContext";
+import { useSiteSettings } from "@/contexts/SiteSettingsContext";
+
+const BADGE_COLORS = ["bg-[#D4AF37]", "bg-[#8B4513]", "bg-[#1C0F00]", "bg-[#D4AF37]", "bg-[#8B4513]", "bg-[#1C0F00]"];
 
 export const FeaturedProducts = () => {
-  const featuredProducts = [
-    {
-      id: 1,
-      name: "Royal Black Abaya",
-      price: "₹3,999",
-      originalPrice: "₹8,999",
-      image: "https://res.cloudinary.com/df4autxjg/image/upload/v1751638933/ROYAL_BLACK_ABAYA_hrx8kd.png",
-      rating: 4.8,
-      reviews: 24000,
-      badge: "Bestseller"
-    },
-    {
-      id: 2,
-      name: "Premium Silk Hijab",
-      price: "₹1,299",
-      originalPrice: "₹4,799",
-      image: "https://res.cloudinary.com/df4autxjg/image/upload/v1751638940/SILK_a4ceiv.png",
-      rating: 4.9,
-      reviews: 1800,
-      badge: "New Arrival"
-    },
-    {
-      id: 3,
-      name: "Elegant Evening Abaya",
-      price: "₹4,499",
-      originalPrice: "₹9,999",
-      image: "https://res.cloudinary.com/df4autxjg/image/upload/v1751634770/Hjb1_bsiwjl.jpg",
-      rating: 4.7,
-      reviews: 3100,
-      badge: "Limited Edition"
-    }
-  ];
+  const navigate = useNavigate();
+  const { getFeatured } = useProducts();
+  const { settings } = useSiteSettings();
+  const featured = getFeatured();
 
-  const handleWhatsAppOrder = (product: any) => {
-    const message = `Hi! I'm interested in the ${product.name} (₹${product.price}). Can you please provide more details?`;
-    const whatsappUrl = `https://wa.me/971XXXXXXXXX?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, "_blank");
+  const handleWhatsAppOrder = (product: { name: string; price: number }) => {
+    const message = `Hi! I'm interested in the ${product.name} (${settings.currencySymbol}${product.price.toLocaleString()}). Can you please provide more details?`;
+    window.open(`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(message)}`, "_blank");
   };
 
+  if (featured.length === 0) return null;
+
   return (
-    <section className="py-16 bg-white">
+    <section className="py-20 bg-white">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-purple-800 mb-4">
+        {/* Section Header */}
+        <div className="text-center mb-14">
+          <div className="inline-flex items-center gap-3 mb-4">
+            <div className="h-[1px] w-10 bg-[#D4AF37]" />
+            <span className="text-[#D4AF37] text-xs tracking-[0.3em] font-medium uppercase">Handpicked for You</span>
+            <div className="h-[1px] w-10 bg-[#D4AF37]" />
+          </div>
+          <h2 className="text-4xl md:text-5xl font-serif font-bold text-[#1C0F00] mb-4">
             Featured Products
           </h2>
-          <p className="text-gray-600 text-lg">
-            Handpicked premium pieces from our Dubai collection
-          </p>
+          <p className="text-[#8B4513]/70 text-lg">Premium pieces from our Dubai collection</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {featuredProducts.map((product) => (
-            <div key={product.id} className="group relative bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-              {/* Badge */}
-              <div className="absolute top-4 left-4 z-10">
-                <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-                  {product.badge}
-                </span>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          {featured.map((product, index) => {
+            const discount = Math.round((1 - product.price / product.originalPrice) * 100);
+            return (
+              <div
+                key={product.id}
+                className="group relative bg-white border border-[#EAD7BB] overflow-hidden hover:border-[#D4AF37] transition-all duration-300 hover:shadow-[0_8px_40px_rgba(212,175,55,0.2)]"
+              >
+                {/* Badge */}
+                <div className="absolute top-4 left-4 z-10">
+                  <span className={`${BADGE_COLORS[index % BADGE_COLORS.length]} text-white px-3 py-1 text-xs font-semibold tracking-wider uppercase`}>
+                    {product.category || "Featured"}
+                  </span>
+                </div>
 
-              {/* Product Image */}
-              <div className="aspect-[3/4] overflow-hidden">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-
-              {/* Product Info */}
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                  {product.name}
-                </h3>
-                
-                {/* Rating */}
-                <div className="flex items-center mb-3">
-                  <div className="flex items-center">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-4 h-4 ${
-                          i < Math.floor(product.rating)
-                            ? "text-yellow-400 fill-current"
-                            : "text-gray-300"
-                        }`}
-                      />
-                    ))}
+                {/* Discount */}
+                {discount > 0 && (
+                  <div className="absolute top-4 right-4 z-10">
+                    <span className="bg-white/90 text-[#8B4513] px-2 py-1 text-xs font-bold border border-[#EAD7BB]">
+                      {discount}% OFF
+                    </span>
                   </div>
-                  <span className="ml-2 text-sm text-gray-600">
-                    {product.rating} ({product.reviews} reviews)
-                  </span>
+                )}
+
+                {/* Image */}
+                <div className="aspect-[3/4] overflow-hidden relative bg-[#FDF5E6]">
+                  <img
+                    src={product.image_url || "https://res.cloudinary.com/df4autxjg/image/upload/v1751638933/ROYAL_BLACK_ABAYA_hrx8kd.png"}
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://res.cloudinary.com/df4autxjg/image/upload/v1751638933/ROYAL_BLACK_ABAYA_hrx8kd.png";
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-[#1C0F00]/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-6">
+                    <button
+                      onClick={() => navigate("/products")}
+                      className="bg-white text-[#1C0F00] px-6 py-2 text-sm font-semibold tracking-wider uppercase transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
+                    >
+                      View Details
+                    </button>
+                  </div>
                 </div>
 
-                {/* Price */}
-                <div className="flex items-center mb-4">
-                  <span className="text-2xl font-bold text-purple-800">
-                    {product.price}
-                  </span>
-                  <span className="text-lg text-gray-500 line-through ml-2">
-                    {product.originalPrice}
-                  </span>
-                </div>
+                {/* Info */}
+                <div className="p-5">
+                  <h3 className="text-lg font-serif font-semibold text-[#1C0F00] mb-1 group-hover:text-[#8B4513] transition-colors line-clamp-1">
+                    {product.name}
+                  </h3>
+                  {product.description && (
+                    <p className="text-xs text-[#8B4513]/50 mb-2 line-clamp-1">{product.description}</p>
+                  )}
 
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                  <Button
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => handleWhatsAppOrder(product)}
-                  >
-                    WhatsApp to Order
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1 border-purple-600 text-purple-600 hover:bg-purple-50"
-                  >
-                    View Details
-                  </Button>
+                  {/* Rating */}
+                  <div className="flex items-center mb-3">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-3.5 h-3.5 text-[#D4AF37] fill-current" />
+                    ))}
+                    <span className="ml-2 text-xs text-[#8B4513]">5.0</span>
+                  </div>
+
+                  {/* Price */}
+                  <div className="flex items-baseline gap-2 mb-5">
+                    <span className="text-2xl font-bold text-[#D4AF37]">
+                      {settings.currencySymbol}{product.price.toLocaleString()}
+                    </span>
+                    {product.originalPrice > product.price && (
+                      <span className="text-sm text-[#8B4513]/50 line-through">
+                        {settings.currencySymbol}{product.originalPrice.toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="h-[1px] bg-gradient-to-r from-[#D4AF37]/40 to-transparent mb-4" />
+
+                  <div className="flex gap-2">
+                    <Button
+                      className="flex-1 bg-[#1C0F00] hover:bg-[#D4AF37] text-white hover:text-[#1C0F00] text-xs tracking-wider font-semibold uppercase transition-all duration-300 rounded-none h-10"
+                      onClick={() => handleWhatsAppOrder(product)}
+                    >
+                      WhatsApp Order
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="border-[#EAD7BB] hover:border-[#D4AF37] hover:bg-[#FDF5E6] text-[#8B4513] rounded-none h-10 w-10 flex-shrink-0"
+                    >
+                      <Heart className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="text-center mt-12">
-          <Button 
-            size="lg" 
-            className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3"
+          <button
+            onClick={() => navigate("/products")}
+            className="inline-flex items-center gap-3 text-[#1C0F00] hover:text-[#D4AF37] font-semibold tracking-wide group transition-colors duration-300"
           >
-            View All Products
-          </Button>
+            <span className="border-b-2 border-[#D4AF37] pb-0.5">View All Products</span>
+            <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" />
+          </button>
         </div>
       </div>
     </section>

@@ -95,6 +95,8 @@ export default function Admin() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState("");
+  const [extraImages, setExtraImages] = useState<string[]>([]);
+  const [newImgUrl, setNewImgUrl] = useState("");
 
   // ── Settings form state ──────────────────────────────────────────────────
   const [sf, setSf] = useState<SiteSettings>(() => ({ ...settings }));
@@ -150,7 +152,7 @@ export default function Admin() {
   }
 
   // ── Product form helpers ─────────────────────────────────────────────────
-  const openAdd = () => { setEditingId(null); setForm(emptyForm); setFormError(""); setShowForm(true); };
+  const openAdd = () => { setEditingId(null); setForm(emptyForm); setExtraImages([]); setNewImgUrl(""); setFormError(""); setShowForm(true); };
 
   const openEdit = (p: Product) => {
     setEditingId(p.id);
@@ -164,6 +166,10 @@ export default function Admin() {
       material: p.material ?? "",
       care_instructions: p.care_instructions ?? "",
     });
+    // Extra images = everything after the primary
+    const extras = (p.images ?? []).filter(img => img !== p.image_url);
+    setExtraImages(extras);
+    setNewImgUrl("");
     setFormError(""); setShowForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -172,6 +178,7 @@ export default function Admin() {
     if (!form.name.trim()) { setFormError("Product name is required."); return; }
     if (!form.price || isNaN(Number(form.price))) { setFormError("Enter a valid price."); return; }
     if (!form.stock_quantity || isNaN(Number(form.stock_quantity))) { setFormError("Enter a valid stock quantity."); return; }
+    const allImages = [form.image_url.trim(), ...extraImages].filter(Boolean);
     const payload = {
       name: form.name.trim(), description: form.description.trim(),
       price: parseFloat(form.price),
@@ -182,9 +189,10 @@ export default function Admin() {
       colors: form.colors ? form.colors.split(",").map(s => s.trim()).filter(Boolean) : undefined,
       material: form.material.trim() || undefined,
       care_instructions: form.care_instructions.trim() || undefined,
+      images: allImages.length > 0 ? allImages : undefined,
     };
     if (editingId) updateProduct(editingId, payload); else addProduct(payload);
-    setShowForm(false); setEditingId(null); setForm(emptyForm);
+    setShowForm(false); setEditingId(null); setForm(emptyForm); setExtraImages([]); setNewImgUrl("");
   };
 
   // ── Settings handlers ────────────────────────────────────────────────────
@@ -329,10 +337,73 @@ export default function Admin() {
                     <Input type="number" value={form.stock_quantity} onChange={e => setForm(f => ({ ...f, stock_quantity: e.target.value }))}
                       placeholder="e.g. 50" className="rounded-none border-gray-200 focus:border-[#D4AF37] focus:ring-0 text-sm" />
                   </div>
+                  {/* Primary image */}
                   <div className="md:col-span-2">
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Image URL</label>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">
+                      Primary Image URL <span className="normal-case font-normal text-gray-400">(shown on cards & first in gallery)</span>
+                    </label>
                     <Input value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
                       placeholder="https://res.cloudinary.com/..." className="rounded-none border-gray-200 focus:border-[#D4AF37] focus:ring-0 text-sm" />
+                  </div>
+
+                  {/* Extra gallery images */}
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">
+                      Gallery Images <span className="normal-case font-normal text-gray-400">(additional views — customers swipe through all)</span>
+                    </label>
+
+                    {/* Primary + extra thumbnail previews */}
+                    {([form.image_url, ...extraImages].filter(Boolean)).length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {[form.image_url, ...extraImages].filter(Boolean).map((img, i) => (
+                          <div key={i} className="relative group">
+                            <img src={img} alt={`img ${i + 1}`}
+                              className="w-16 h-20 object-cover border border-gray-200"
+                              onError={e => { (e.target as HTMLImageElement).style.opacity = "0.3"; }} />
+                            <span className={`absolute top-0.5 left-0.5 text-[9px] font-bold px-1 ${i === 0 ? "bg-[#D4AF37] text-white" : "bg-gray-800/70 text-white"}`}>
+                              {i === 0 ? "Primary" : `#${i + 1}`}
+                            </span>
+                            {i > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => setExtraImages(prev => prev.filter((_, j) => j !== i - 1))}
+                                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow"
+                              >×</button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Add image row */}
+                    <div className="flex gap-2">
+                      <Input
+                        value={newImgUrl}
+                        onChange={e => setNewImgUrl(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter" && newImgUrl.trim()) {
+                            e.preventDefault();
+                            setExtraImages(prev => [...prev, newImgUrl.trim()]);
+                            setNewImgUrl("");
+                          }
+                        }}
+                        placeholder="Paste additional image URL and press Add…"
+                        className="flex-1 rounded-none border-gray-200 focus:border-[#D4AF37] focus:ring-0 text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (newImgUrl.trim()) {
+                            setExtraImages(prev => [...prev, newImgUrl.trim()]);
+                            setNewImgUrl("");
+                          }
+                        }}
+                        className="border border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-white px-4 text-xs font-bold uppercase tracking-wider transition-all flex-shrink-0"
+                      >+ Add</button>
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-1.5">
+                      Upload images to <span className="font-medium">cloudinary.com</span> and paste URLs here. Customers can zoom, rotate, and browse all images.
+                    </p>
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Sizes <span className="font-normal normal-case text-gray-400">(comma-separated)</span></label>
@@ -361,13 +432,6 @@ export default function Admin() {
                   <Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                     rows={2} placeholder="Short product description..." className="rounded-none border-gray-200 focus:border-[#D4AF37] focus:ring-0 text-sm resize-none" />
                 </div>
-
-                {form.image_url && (
-                  <div className="mb-4">
-                    <img src={form.image_url} alt="preview" className="w-20 h-20 object-cover border border-gray-200"
-                      onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                  </div>
-                )}
 
                 <div className="flex items-center gap-3 mb-4">
                   <button

@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useProducts, type Product } from "@/contexts/ProductsContext";
 import { useSiteSettings, DEFAULT_SETTINGS, type SiteSettings } from "@/contexts/SiteSettingsContext";
+import { useCoupons, type Coupon, type DiscountType } from "@/contexts/CouponsContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Package, Plus, Edit2, Trash2, Star, LogOut,
-  AlertTriangle, TrendingUp, Eye, X, Settings, CheckCircle2
+  AlertTriangle, TrendingUp, Eye, X, Settings, CheckCircle2, Tag
 } from "lucide-react";
 
 const ADMIN_PASSWORD = "hijab2024";
@@ -54,10 +55,39 @@ export default function Admin() {
   const { products, addProduct, updateProduct, deleteProduct, getFeatured } = useProducts();
   const { settings, updateSettings, resetSettings } = useSiteSettings();
 
+  const { coupons, addCoupon, updateCoupon, deleteCoupon } = useCoupons();
   const [authed, setAuthed] = useState(() => sessionStorage.getItem("hae_admin") === "1");
   const [pwInput, setPwInput] = useState("");
   const [pwError, setPwError] = useState(false);
-  const [activeTab, setActiveTab] = useState<"products" | "settings">("products");
+  const [activeTab, setActiveTab] = useState<"products" | "settings" | "coupons">("products");
+
+  // ── Coupon form state ────────────────────────────────────────────────────
+  const emptyCouponForm = { code: "", type: "percent" as DiscountType, value: "", minOrder: "", description: "", active: true };
+  const [couponForm, setCouponForm] = useState(emptyCouponForm);
+  const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
+  const [showCouponForm, setShowCouponForm] = useState(false);
+  const [couponFormError, setCouponFormError] = useState("");
+
+  const openAddCoupon = () => { setEditingCouponId(null); setCouponForm(emptyCouponForm); setCouponFormError(""); setShowCouponForm(true); };
+  const openEditCoupon = (c: Coupon) => {
+    setEditingCouponId(c.id);
+    setCouponForm({ code: c.code, type: c.type, value: c.value.toString(), minOrder: c.minOrder.toString(), description: c.description, active: c.active });
+    setCouponFormError(""); setShowCouponForm(true);
+  };
+  const handleSaveCoupon = () => {
+    if (!couponForm.code.trim()) { setCouponFormError("Coupon code is required."); return; }
+    if (couponForm.type !== "freeship" && (!couponForm.value || isNaN(Number(couponForm.value)))) { setCouponFormError("Enter a valid discount value."); return; }
+    const payload = {
+      code: couponForm.code.trim().toUpperCase(),
+      type: couponForm.type,
+      value: couponForm.type === "freeship" ? 0 : parseFloat(couponForm.value),
+      minOrder: couponForm.minOrder ? parseFloat(couponForm.minOrder) : 0,
+      description: couponForm.description.trim(),
+      active: couponForm.active,
+    };
+    if (editingCouponId) updateCoupon(editingCouponId, payload); else addCoupon(payload);
+    setShowCouponForm(false); setEditingCouponId(null); setCouponForm(emptyCouponForm);
+  };
 
   // ── Products form state ──────────────────────────────────────────────────
   const [showForm, setShowForm] = useState(false);
@@ -204,6 +234,7 @@ export default function Admin() {
           <div className="flex">
             {[
               { id: "products" as const, icon: Package, label: "Products" },
+              { id: "coupons" as const, icon: Tag, label: "Coupons" },
               { id: "settings" as const, icon: Settings, label: "Store Settings" },
             ].map(tab => (
               <button
@@ -578,6 +609,177 @@ export default function Admin() {
             </div>
           </div>
         )}
+
+        {/* ══ COUPONS TAB ═══════════════════════════════════════════════════ */}
+        {activeTab === "coupons" && (
+          <div className="space-y-5">
+            {/* Header + Add button */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-serif font-bold text-[#1C0F00] text-lg">Discount Coupons</h2>
+                <p className="text-xs text-gray-400 mt-0.5">{coupons.filter(c => c.active).length} active · {coupons.length} total</p>
+              </div>
+              <Button
+                onClick={openAddCoupon}
+                className="bg-[#D4AF37] hover:bg-[#B8972A] text-[#1C0F00] rounded-none text-xs font-bold uppercase tracking-wider h-9 px-4"
+              >
+                <Plus className="w-3.5 h-3.5 mr-1.5" /> New Coupon
+              </Button>
+            </div>
+
+            {/* Coupon form */}
+            {showCouponForm && (
+              <div className="bg-white border border-[#D4AF37]/30 p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-serif font-bold text-[#1C0F00] text-base">{editingCouponId ? "Edit Coupon" : "Add New Coupon"}</h3>
+                  <button onClick={() => setShowCouponForm(false)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Coupon Code *</label>
+                    <Input
+                      value={couponForm.code}
+                      onChange={e => setCouponForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
+                      placeholder="e.g. HIJABFIRST"
+                      className="rounded-none border-gray-200 focus:border-[#D4AF37] focus:ring-0 text-sm font-mono uppercase tracking-widest"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Discount Type *</label>
+                    <Select value={couponForm.type} onValueChange={(v: DiscountType) => setCouponForm(f => ({ ...f, type: v, value: "" }))}>
+                      <SelectTrigger className="rounded-none border-gray-200 focus:border-[#D4AF37] text-sm h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="percent">Percentage Off (%)</SelectItem>
+                        <SelectItem value="flat">Flat Amount Off (₹)</SelectItem>
+                        <SelectItem value="freeship">Free Shipping</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {couponForm.type !== "freeship" && (
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">
+                        {couponForm.type === "percent" ? "Discount %" : "Discount Amount"} *
+                      </label>
+                      <Input
+                        type="number"
+                        value={couponForm.value}
+                        onChange={e => setCouponForm(f => ({ ...f, value: e.target.value }))}
+                        placeholder={couponForm.type === "percent" ? "e.g. 10" : "e.g. 200"}
+                        className="rounded-none border-gray-200 focus:border-[#D4AF37] focus:ring-0 text-sm"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Minimum Order Amount</label>
+                    <Input
+                      type="number"
+                      value={couponForm.minOrder}
+                      onChange={e => setCouponForm(f => ({ ...f, minOrder: e.target.value }))}
+                      placeholder="0 for no minimum"
+                      className="rounded-none border-gray-200 focus:border-[#D4AF37] focus:ring-0 text-sm"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Customer-visible Description</label>
+                    <Input
+                      value={couponForm.description}
+                      onChange={e => setCouponForm(f => ({ ...f, description: e.target.value }))}
+                      placeholder="e.g. 10% off your first order"
+                      className="rounded-none border-gray-200 focus:border-[#D4AF37] focus:ring-0 text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 mb-4">
+                  <button
+                    onClick={() => setCouponForm(f => ({ ...f, active: !f.active }))}
+                    className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border transition-all ${couponForm.active ? "bg-[#D4AF37] border-[#D4AF37] text-[#1C0F00]" : "bg-white border-gray-200 text-gray-500 hover:border-[#D4AF37]"}`}
+                  >
+                    {couponForm.active ? "Active ✓" : "Inactive"}
+                  </button>
+                  <span className="text-[10px] text-gray-400">Inactive coupons are hidden from customers</span>
+                </div>
+
+                {couponFormError && <p className="text-red-500 text-xs mb-3">{couponFormError}</p>}
+
+                <div className="flex gap-3">
+                  <Button onClick={handleSaveCoupon} className="bg-[#1C0F00] hover:bg-[#D4AF37] hover:text-[#1C0F00] text-white rounded-none text-xs font-bold uppercase tracking-wider h-9 px-6">
+                    {editingCouponId ? "Update Coupon" : "Create Coupon"}
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowCouponForm(false)} className="rounded-none border-gray-200 text-gray-500 text-xs h-9 px-4">Cancel</Button>
+                </div>
+              </div>
+            )}
+
+            {/* Coupons table */}
+            <div className="bg-white border border-gray-200">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 bg-gray-50">
+                      <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Code</th>
+                      <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Discount</th>
+                      <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Min Order</th>
+                      <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 hidden md:table-cell">Description</th>
+                      <th className="text-center px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Status</th>
+                      <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {coupons.length === 0 ? (
+                      <tr><td colSpan={6} className="text-center py-12 text-gray-400 text-sm">No coupons yet. Add one above.</td></tr>
+                    ) : (
+                      coupons.map(c => (
+                        <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-3">
+                            <span className="font-mono font-bold text-[#1C0F00] bg-[#FDF5E6] border border-[#EAD7BB] px-2 py-0.5 text-xs tracking-wider">{c.code}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            {c.type === "percent" && <span className="font-semibold text-[#D4AF37]">{c.value}% off</span>}
+                            {c.type === "flat" && <span className="font-semibold text-[#D4AF37]">₹{c.value} off</span>}
+                            {c.type === "freeship" && <span className="font-semibold text-blue-500">Free shipping</span>}
+                          </td>
+                          <td className="px-4 py-3 text-[#8B4513]/60 text-xs">
+                            {c.minOrder > 0 ? `₹${c.minOrder.toLocaleString()}` : "None"}
+                          </td>
+                          <td className="px-4 py-3 text-[#8B4513]/60 text-xs hidden md:table-cell">{c.description || "—"}</td>
+                          <td className="px-4 py-3 text-center">
+                            <button
+                              onClick={() => updateCoupon(c.id, { active: !c.active })}
+                              className={`text-[10px] font-bold px-2 py-0.5 border transition-all ${c.active ? "bg-green-50 border-green-200 text-green-600 hover:bg-red-50 hover:border-red-200 hover:text-red-500" : "bg-gray-50 border-gray-200 text-gray-400 hover:bg-green-50 hover:border-green-200 hover:text-green-600"}`}
+                            >
+                              {c.active ? "Active" : "Inactive"}
+                            </button>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center justify-end gap-2">
+                              <button onClick={() => openEditCoupon(c)} className="text-gray-400 hover:text-[#D4AF37] transition-colors"><Edit2 className="w-3.5 h-3.5" /></button>
+                              <button onClick={() => { if (confirm(`Delete coupon ${c.code}?`)) deleteCoupon(c.id); }} className="text-gray-400 hover:text-red-500 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* How-to tip */}
+            <div className="bg-blue-50 border border-blue-100 px-4 py-3">
+              <p className="text-[11px] text-blue-700">
+                <strong>Tip:</strong> Share coupons on Instagram / WhatsApp stories to drive orders.
+                Try <code className="bg-blue-100 px-1 font-mono">HIJABFIRST</code> for new customers,{" "}
+                <code className="bg-blue-100 px-1 font-mono">FREESHIP</code> for hesitant buyers, and{" "}
+                <code className="bg-blue-100 px-1 font-mono">SAVE200</code> for bulk orders.
+              </p>
+            </div>
+          </div>
+        )}
+
       </main>
     </div>
   );

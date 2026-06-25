@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import {
   Minus, Plus, Trash2, ShoppingBag, ArrowRight,
   MapPin, Navigation, MessageCircle, Truck, Smartphone, Copy, CheckCircle2,
-  Shield, Lock, Phone
+  Shield, Lock, Phone, Tag, X
 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
+import { useCoupons, type Coupon } from "@/contexts/CouponsContext";
 import { useNavigate } from "react-router-dom";
 
 interface AddressData {
@@ -35,6 +36,7 @@ const STEPS: { id: Step; label: string }[] = [
 const Cart = () => {
   const { cartItems, removeFromCart, updateQuantity, clearCart, cartTotal } = useCart();
   const { settings } = useSiteSettings();
+  const { validateCoupon, calcDiscount } = useCoupons();
   const navigate = useNavigate();
 
   const [step, setStep] = useState<Step>("cart");
@@ -44,9 +46,17 @@ const Cart = () => {
   const [payMethod, setPayMethod] = useState<PayMethod | null>(null);
   const [upiCopied, setUpiCopied] = useState(false);
 
+  // Coupon state
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [couponError, setCouponError] = useState("");
+  const [couponApplying, setCouponApplying] = useState(false);
+
   const sym = settings.currencySymbol;
-  const shipping = cartTotal > 5000 ? 0 : 299;
-  const total = cartTotal + shipping;
+  const baseShipping = cartTotal > 5000 ? 0 : 299;
+  const discount = appliedCoupon ? calcDiscount(appliedCoupon, cartTotal, baseShipping) : 0;
+  const shipping = appliedCoupon?.type === "freeship" ? 0 : baseShipping;
+  const total = cartTotal - (appliedCoupon?.type !== "freeship" ? discount : 0) + shipping;
 
   const setField = (key: keyof AddressData, val: string) =>
     setAddr(prev => ({ ...prev, [key]: val }));
@@ -66,6 +76,25 @@ const Cart = () => {
     setAddrError(""); return true;
   };
 
+  const applyCoupon = () => {
+    if (!couponInput.trim()) return;
+    setCouponApplying(true);
+    setCouponError("");
+    const result = validateCoupon(couponInput.trim(), cartTotal);
+    setTimeout(() => {
+      setCouponApplying(false);
+      if (result.valid && result.coupon) {
+        setAppliedCoupon(result.coupon);
+        setCouponInput("");
+        setCouponError("");
+      } else {
+        setCouponError(result.error || "Invalid code");
+      }
+    }, 400);
+  };
+
+  const removeCoupon = () => { setAppliedCoupon(null); setCouponError(""); setCouponInput(""); };
+
   const buildOrderMessage = (method: string) => {
     const lines = cartItems.map(i =>
       `🛍 ${i.product.name} × ${i.quantity} — ${sym}${(i.product.price * i.quantity).toLocaleString()}`
@@ -73,9 +102,12 @@ const Cart = () => {
     const locationLine = addr.location
       ? `\n📍 https://maps.google.com/?q=${addr.location.lat},${addr.location.lng}`
       : "";
+    const discountLine = appliedCoupon
+      ? `\nDiscount (${appliedCoupon.code}): -${sym}${discount.toLocaleString()}`
+      : "";
     return (
       `Hi! I'd like to place an order (${method}):\n\n${lines}\n\n` +
-      `Subtotal: ${sym}${cartTotal.toLocaleString()}\n` +
+      `Subtotal: ${sym}${cartTotal.toLocaleString()}${discountLine}\n` +
       `Shipping: ${shipping === 0 ? "Free" : `${sym}${shipping}`}\n` +
       `Total: ${sym}${total.toLocaleString()}\n\n` +
       `📦 Delivery Address:\n${addr.fullName}\n${addr.phone}\n` +
@@ -190,29 +222,92 @@ const Cart = () => {
                 ))}
               </div>
 
+              {/* Order summary sidebar */}
               <div className="lg:col-span-1">
-                <div className="bg-white border border-[#EAD7BB] p-5 sticky top-24">
-                  <h2 className="font-serif font-bold text-[#1C0F00] text-lg mb-4 pb-3 border-b border-[#EAD7BB]">Order Summary</h2>
-                  <div className="space-y-2.5 mb-4 text-sm">
+                <div className="bg-white border border-[#EAD7BB] p-5 sticky top-24 space-y-4">
+                  <h2 className="font-serif font-bold text-[#1C0F00] text-lg pb-3 border-b border-[#EAD7BB]">Order Summary</h2>
+
+                  {/* Coupon input */}
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5">
+                      <Tag className="w-3 h-3" /> Coupon Code
+                    </p>
+                    {appliedCoupon ? (
+                      <div className="flex items-center gap-2 bg-green-50 border border-green-200 px-3 py-2">
+                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-green-700 text-xs">{appliedCoupon.code}</p>
+                          <p className="text-[10px] text-green-600">{appliedCoupon.description}</p>
+                        </div>
+                        <button onClick={removeCoupon} className="text-green-400 hover:text-red-400 transition-colors flex-shrink-0">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex gap-0">
+                          <Input
+                            value={couponInput}
+                            onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponError(""); }}
+                            onKeyDown={e => e.key === "Enter" && applyCoupon()}
+                            placeholder="Enter code e.g. HIJABFIRST"
+                            className="rounded-none border-[#EAD7BB] focus:border-[#D4AF37] focus:ring-0 text-xs uppercase h-9 flex-1 font-mono tracking-wider"
+                          />
+                          <button
+                            onClick={applyCoupon}
+                            disabled={couponApplying || !couponInput.trim()}
+                            className="bg-[#1C0F00] hover:bg-[#D4AF37] hover:text-[#1C0F00] text-white text-xs font-bold uppercase tracking-wider px-4 h-9 transition-all disabled:opacity-40 flex-shrink-0"
+                          >
+                            {couponApplying ? "…" : "Apply"}
+                          </button>
+                        </div>
+                        {couponError && (
+                          <p className="text-red-500 text-[11px] mt-1 flex items-center gap-1">
+                            <X className="w-3 h-3" />{couponError}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Price breakdown */}
+                  <div className="space-y-2.5 text-sm border-t border-[#EAD7BB] pt-4">
                     <div className="flex justify-between text-[#8B4513]/70">
                       <span>Subtotal ({cartItems.reduce((s, i) => s + i.quantity, 0)} items)</span>
                       <span>{sym}{cartTotal.toLocaleString()}</span>
                     </div>
+                    {appliedCoupon && (
+                      <div className="flex justify-between text-green-600 font-semibold">
+                        <span className="flex items-center gap-1"><Tag className="w-3 h-3" />{appliedCoupon.code}</span>
+                        <span>− {sym}{discount.toLocaleString()}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-[#8B4513]/70">
                       <span>Shipping</span>
                       <span className={shipping === 0 ? "text-green-600 font-semibold" : ""}>{shipping === 0 ? "Free" : `${sym}${shipping}`}</span>
                     </div>
-                    {shipping > 0 && <p className="text-[10px] text-[#8B4513]/50">Add {sym}{(5000 - cartTotal).toLocaleString()} more for free shipping</p>}
-                    {shipping === 0 && <p className="text-[10px] text-green-600 bg-green-50 px-2 py-1">🎉 You qualify for free shipping!</p>}
+                    {!appliedCoupon && shipping > 0 && cartTotal < 5000 && (
+                      <p className="text-[10px] text-[#8B4513]/50">
+                        Add {sym}{(5000 - cartTotal).toLocaleString()} more for free shipping
+                      </p>
+                    )}
                     <div className="border-t border-[#EAD7BB] pt-2.5 flex justify-between font-bold text-[#1C0F00]">
                       <span>Total</span>
                       <span className="text-[#D4AF37] text-lg">{sym}{total.toLocaleString()}</span>
                     </div>
+                    {appliedCoupon && (
+                      <p className="text-[10px] text-green-600 bg-green-50 px-2 py-1.5 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 flex-shrink-0" />
+                        You saved {sym}{discount.toLocaleString()} with coupon {appliedCoupon.code}!
+                      </p>
+                    )}
                   </div>
-                  <Button className="w-full bg-[#1C0F00] hover:bg-[#D4AF37] hover:text-[#1C0F00] text-white rounded-none font-bold tracking-wider uppercase text-sm h-11 transition-all duration-300 mb-3"
+
+                  <Button className="w-full bg-[#1C0F00] hover:bg-[#D4AF37] hover:text-[#1C0F00] text-white rounded-none font-bold tracking-wider uppercase text-sm h-11 transition-all duration-300"
                     onClick={() => setStep("address")}>
                     Proceed to Checkout <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
+
                   {/* Accepted payment methods */}
                   <div className="bg-[#FDF5E6] border border-[#EAD7BB] p-3">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-[#8B4513] mb-2">We accept</p>
@@ -282,6 +377,15 @@ const Cart = () => {
                     )}
                   </div>
                   {addrError && <p className="text-red-500 text-xs">{addrError}</p>}
+
+                  {/* Mini order recap with coupon savings */}
+                  {appliedCoupon && (
+                    <div className="bg-green-50 border border-green-200 px-3 py-2 flex items-center gap-2 text-xs text-green-700">
+                      <Tag className="w-3.5 h-3.5 flex-shrink-0" />
+                      Coupon <strong>{appliedCoupon.code}</strong> applied — saving {sym}{discount.toLocaleString()}
+                    </div>
+                  )}
+
                   <div className="flex gap-3 pt-2">
                     <Button onClick={() => { if (validateAddress()) setStep("payment"); }}
                       className="flex-1 bg-[#1C0F00] hover:bg-[#D4AF37] hover:text-[#1C0F00] text-white rounded-none font-bold tracking-wider uppercase text-sm h-11">
@@ -319,7 +423,16 @@ const Cart = () => {
                   ))}
                 </div>
                 <div className="border-t border-[#EAD7BB] pt-2 space-y-1 text-sm">
-                  <div className="flex justify-between text-[#8B4513]/60"><span>Shipping</span><span className={shipping === 0 ? "text-green-600 font-semibold" : ""}>{shipping === 0 ? "Free" : `${sym}${shipping}`}</span></div>
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-green-600 font-semibold text-xs">
+                      <span className="flex items-center gap-1"><Tag className="w-3 h-3" />{appliedCoupon.code}</span>
+                      <span>− {sym}{discount.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-[#8B4513]/60">
+                    <span>Shipping</span>
+                    <span className={shipping === 0 ? "text-green-600 font-semibold" : ""}>{shipping === 0 ? "Free" : `${sym}${shipping}`}</span>
+                  </div>
                   <div className="flex justify-between font-bold text-[#1C0F00]">
                     <span>Total</span><span className="text-[#D4AF37] text-base">{sym}{total.toLocaleString()}</span>
                   </div>
@@ -379,8 +492,7 @@ const Cart = () => {
                     <div className="mt-3 pt-3 border-t border-gray-100 flex items-start gap-2" onClick={e => e.stopPropagation()}>
                       <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
                       <p className="text-xs text-[#8B4513]/70">
-                        Your order will be confirmed on WhatsApp. Our team will call before delivery.
-                        Keep exact change ready if possible.
+                        Your order will be confirmed on WhatsApp. Our team will call before delivery. Keep exact change ready if possible.
                       </p>
                     </div>
                   )}
@@ -398,7 +510,6 @@ const Cart = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-bold text-[#1C0F00] text-sm">UPI Payment</p>
-                        {/* App chips */}
                         <span className="text-[10px] font-bold bg-[#5f259f] text-white px-2 py-0.5 rounded-full">PhonePe</span>
                         <span className="text-[10px] font-bold bg-[#4285F4] text-white px-2 py-0.5 rounded-full">GPay</span>
                         <span className="text-[10px] font-bold bg-[#002970] text-white px-2 py-0.5 rounded-full">Paytm</span>
@@ -428,10 +539,10 @@ const Cart = () => {
                               `Send exactly ${sym}${total.toLocaleString()} to this UPI ID`,
                               "Take a screenshot of the payment success screen",
                               "Click \"I've Paid\" to send us the confirmation",
-                            ].map((step, i) => (
+                            ].map((s, i) => (
                               <div key={i} className="flex items-start gap-2.5">
                                 <div className="w-4 h-4 rounded-full bg-[#D4AF37] text-[#1C0F00] flex items-center justify-center text-[9px] font-bold flex-shrink-0 mt-0.5">{i + 1}</div>
-                                <p className="text-xs text-[#8B4513]/80">{step}</p>
+                                <p className="text-xs text-[#8B4513]/80">{s}</p>
                               </div>
                             ))}
                           </div>
@@ -439,7 +550,7 @@ const Cart = () => {
                           {/* UPI ID copy box */}
                           <div>
                             <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">UPI ID</p>
-                            <div className="flex items-center gap-0 border border-[#EAD7BB] overflow-hidden">
+                            <div className="flex items-center border border-[#EAD7BB] overflow-hidden">
                               <span className="flex-1 font-mono font-bold text-[#1C0F00] px-3 py-2.5 text-sm bg-[#FDF5E6] select-all">
                                 {settings.upiId}
                               </span>

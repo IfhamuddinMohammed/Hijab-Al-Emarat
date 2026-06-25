@@ -8,6 +8,7 @@ import { ProductsProvider } from "@/contexts/ProductsContext";
 import { SiteSettingsProvider } from "@/contexts/SiteSettingsContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
+import { CouponsProvider } from "@/contexts/CouponsContext";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import About from "./pages/About";
@@ -26,6 +27,7 @@ const App = () => (
       <ProductsProvider>
       <CartProvider>
       <WishlistProvider>
+      <CouponsProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -40,6 +42,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+      </CouponsProvider>
       </WishlistProvider>
       </CartProvider>
       </ProductsProvider>

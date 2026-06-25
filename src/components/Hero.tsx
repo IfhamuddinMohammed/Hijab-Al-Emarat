@@ -94,7 +94,7 @@ export const Hero = () => {
           </div>
           <div className="w-1 h-1 bg-[#D4AF37] rounded-full hidden sm:block" />
           <div className="flex items-center gap-2">
-            <span className="text-[#D4AF37] font-semibold">2000+</span>
+            <span className="text-[#D4AF37] font-semibold">3,200+</span>
             <span>Happy Customers</span>
           </div>
           <div className="w-1 h-1 bg-[#D4AF37] rounded-full hidden sm:block" />

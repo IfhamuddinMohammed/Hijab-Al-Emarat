@@ -25,7 +25,8 @@ const About = () => {
           </div>
           <h1 className="text-5xl md:text-6xl font-serif font-bold mb-6 leading-tight">Our Story</h1>
           <p className="text-white/70 text-lg max-w-3xl mx-auto leading-relaxed">
-            Bringing Dubai's finest modest fashion to India with love, quality, and cultural respect
+            From the souks of Dubai to doorsteps across India — bringing authentic Emirati elegance
+            to the women who deserve it most
           </p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-60" />
@@ -46,20 +47,22 @@ const About = () => {
                 </h2>
                 <div className="space-y-4 text-[#8B4513]/70 leading-relaxed text-base">
                   <p>
-                    Based in the heart of Dubai, we understand the elegance and sophistication
-                    that comes with authentic Middle Eastern modest fashion. Our journey began
-                    with a simple vision: to make premium Dubai fashion accessible to our
-                    sisters in India.
+                    Hijab Al Emarat was founded by a family rooted in both the UAE and India —
+                    two worlds that share a deep reverence for modesty, dignity, and style.
+                    Living between Dubai and India, we saw first-hand the gap between the
+                    exquisite modest fashion available in Emirati boutiques and what was
+                    accessible to women back home.
                   </p>
                   <p>
-                    Every piece in our collection is carefully selected from Dubai's finest
-                    boutiques and ateliers, ensuring that you receive nothing but the highest
-                    quality fabrics, impeccable craftsmanship, and timeless designs.
+                    So we built the bridge. Every abaya, hijab, and niqab in our collection
+                    is personally sourced from verified artisans and ateliers across Dubai and
+                    the wider UAE. No middle-men, no compromises on quality. Just the real thing,
+                    delivered to you.
                   </p>
                   <p>
-                    We believe modest fashion should be beautiful, comfortable, and accessible.
-                    That's why we've made it our mission to bring you authentic Dubai elegance
-                    right to your doorstep in India.
+                    We believe modest fashion is an expression of identity — not a limitation.
+                    It's a choice made with pride, faith, and style. That belief drives every
+                    piece we curate and every customer we serve.
                   </p>
                 </div>
               </div>
@@ -95,23 +98,23 @@ const About = () => {
             {[
               {
                 icon: Heart,
-                title: "Authentic Quality",
-                desc: "Every piece is sourced directly from Dubai's premium fashion houses, ensuring authentic quality and craftsmanship.",
+                title: "Personally Curated",
+                desc: "We don't list everything — we list the best. Each piece is individually reviewed before it joins our collection.",
               },
               {
                 icon: Globe,
-                title: "Cultural Respect",
-                desc: "We understand and honor the cultural significance of modest fashion, bringing you pieces that celebrate tradition with modern elegance.",
+                title: "Cultural Authenticity",
+                desc: "Our roots span both UAE and India. We understand the nuance of modest fashion and curate with genuine respect for that heritage.",
               },
               {
                 icon: Shield,
-                title: "Trust & Safety",
-                desc: "Secure transactions, quality assurance, and customer protection are our top priorities for your peace of mind.",
+                title: "Zero-Risk Shopping",
+                desc: "Pay on delivery, 7-day returns, and a WhatsApp team ready to assist — shop with absolute confidence.",
               },
               {
                 icon: Truck,
-                title: "Fast Delivery",
-                desc: "Quick and reliable delivery across India, with cash on delivery options for your convenience.",
+                title: "Reliable Delivery",
+                desc: "Tracked, insured shipping across all Indian states. Every order is packed to protect the garment during transit.",
               },
             ].map((item) => (
               <div
@@ -139,11 +142,11 @@ const About = () => {
             <div className="h-[1px] w-10 bg-[#D4AF37]" />
           </div>
           <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">
-            Ready to Experience Dubai Elegance?
+            Questions? We're Right Here.
           </h2>
           <p className="text-white/50 text-lg mb-8 max-w-2xl mx-auto">
-            Connect with us on WhatsApp for personalized assistance, styling advice,
-            or to place your order directly.
+            Not sure about sizing, fabric, or delivery timelines? Our team replies on WhatsApp
+            within minutes — we're here to make sure you love what you receive.
           </p>
           <button
             onClick={() => window.open("https://wa.me/971582109797", "_blank")}

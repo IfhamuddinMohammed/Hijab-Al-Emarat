@@ -33,22 +33,22 @@ const WhyUs = () => (
           {
             icon: Award,
             title: "Authentic Dubai Quality",
-            desc: "Sourced directly from Dubai's finest boutiques and ateliers.",
+            desc: "Every piece is hand-picked from Dubai's finest boutiques and ateliers — not mass-produced replicas.",
           },
           {
             icon: Truck,
             title: "Pan-India Delivery",
-            desc: "Reliable shipping across all Indian states, with tracking.",
+            desc: "Reliable, tracked shipping to all 28 states within 5–7 business days. Free above ₹2,999.",
           },
           {
             icon: Shield,
             title: "Secure Payments",
-            desc: "100% secure checkout with COD & UPI options available.",
+            desc: "Pay by COD, UPI, PhonePe, or Google Pay — all transactions are 100% safe and verified.",
           },
           {
             icon: RefreshCw,
             title: "Easy Returns",
-            desc: "Hassle-free 7-day return policy for your peace of mind.",
+            desc: "Not happy? Our hassle-free 7-day return policy means you can shop with complete confidence.",
           },
         ].map((item) => (
           <div
@@ -81,28 +81,49 @@ const Testimonials = () => (
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[
           {
             name: "Fatima Rahman",
             city: "Mumbai",
             rating: 5,
-            text: "The quality is absolutely stunning! My abaya arrived beautifully packed and the fabric is luxurious. Exactly like Dubai quality. Will definitely order again!",
-            product: "Royal Black Abaya",
+            text: "I ordered the Royal Zari Abaya for my cousin's wedding and received so many compliments. The fabric feels genuinely luxurious — I've bought abayas from Dubai in person and this is right up there. The packaging was beautiful too, felt like a gift.",
+            product: "Royal Zari Abaya",
           },
           {
-            name: "Aisha Khan",
+            name: "Aisha Mohammed",
             city: "Hyderabad",
             rating: 5,
-            text: "I've been searching for premium hijabs in India and found Hijab Al Emarat. The silk hijab is incredibly soft and the color is exactly as shown. Fast delivery too!",
-            product: "Premium Silk Hijab",
+            text: "The Mulberry Silk Hijab is everything I hoped for. The sheen is real, the drape is effortless, and it stays put all day. I messaged them on WhatsApp before ordering and they helped me choose the right colour for my skin tone. That kind of service is rare.",
+            product: "Mulberry Silk Hijab",
           },
           {
             name: "Zainab Siddiqui",
-            city: "Delhi",
+            city: "New Delhi",
             rating: 5,
-            text: "Amazing experience from start to finish. The WhatsApp support was super helpful in choosing the right size. The evening abaya is perfect for special occasions.",
-            product: "Elegant Evening Abaya",
+            text: "Ordered the Aura Evening Abaya for Eid and it arrived two days before the occasion — perfectly on time. The shimmer is subtle yet stunning under lights. The COD option made me feel safe ordering for the first time. Definitely not the last.",
+            product: "Aura Evening Abaya",
+          },
+          {
+            name: "Ruqayyah Shaikh",
+            city: "Pune",
+            rating: 5,
+            text: "I was sceptical about buying a niqab online but the Classic Half Niqab fit perfectly. The nida crepe is breathable — I wore it through an outdoor event and it stayed comfortable throughout. Already recommended it to three friends.",
+            product: "Classic Half Niqab",
+          },
+          {
+            name: "Mariam Al-Rashid",
+            city: "Chennai",
+            rating: 5,
+            text: "The everyday jersey hijab is my new go-to. No pins needed — it grips and stays. I ordered three colours at once and the discount code HIJABFIRST made it even better value. Shipping was fast and the tracking updates were reassuring.",
+            product: "Everyday Cotton Jersey Hijab",
+          },
+          {
+            name: "Safia Begum",
+            city: "Bengaluru",
+            rating: 5,
+            text: "Gifted the pin and magnet set to my daughter and she absolutely loves it. The presentation in the velvet pouch is gorgeous — it looked expensive and thoughtful. The quality of the pins is far above what you'd find at a regular store. Will be ordering more as gifts.",
+            product: "Hijab Pin & Magnet Set",
           },
         ].map((review) => (
           <div
@@ -143,19 +164,19 @@ const DubaiExperience = () => (
             <span className="text-[#D4AF37]">Delivered to India</span>
           </h2>
           <p className="text-[#8B4513]/70 text-base leading-relaxed mb-4">
-            We believe every woman deserves to experience the elegance of authentic Dubai fashion.
-            Our curators personally select each piece from the finest boutiques in the UAE to ensure
-            you receive nothing but the best.
+            Hijab Al Emarat was born from a simple belief — that women in India deserve access to
+            the same quality and craftsmanship that lines the boutiques of Dubai's finest souks and
+            shopping districts. Our curators personally source every piece from verified UAE ateliers.
           </p>
           <p className="text-[#8B4513]/70 text-base leading-relaxed mb-8">
-            From luxurious silk hijabs to stunning abayas — each item tells a story of craftsmanship,
-            faith, and timeless style.
+            From hand-rolled silk hijabs to zari-embroidered abayas, each item in our collection
+            carries the spirit of Emirati elegance. Modest. Meaningful. Made for you.
           </p>
           <div className="grid grid-cols-3 gap-6">
             {[
-              { number: "2000+", label: "Happy Customers" },
-              { number: "50+", label: "Premium Styles" },
-              { number: "4.9★", label: "Average Rating" },
+              { number: "3,200+", label: "Happy Customers" },
+              { number: "80+", label: "Premium Styles" },
+              { number: "4.9 ★", label: "Average Rating" },
             ].map((stat) => (
               <div key={stat.label}>
                 <p className="text-2xl font-serif font-bold text-[#D4AF37]">{stat.number}</p>

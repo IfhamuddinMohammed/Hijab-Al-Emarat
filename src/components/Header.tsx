@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,6 +13,7 @@ export const Header = () => {
   const navigate = useNavigate();
   const { settings } = useSiteSettings();
   const { cartCount } = useCart();
+  const { wishlistCount } = useWishlist();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -90,9 +92,11 @@ export const Header = () => {
                 className="relative text-[#3D2B1F] hover:text-[#D4AF37] hover:bg-[#FDF5E6]"
               >
                 <Heart className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 bg-[#D4AF37] text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
-                  0
-                </span>
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[#D4AF37] text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                    {wishlistCount > 9 ? "9+" : wishlistCount}
+                  </span>
+                )}
               </Button>
 
               <Button

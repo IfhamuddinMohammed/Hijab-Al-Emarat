@@ -1,11 +1,12 @@
 
 import { useState } from "react";
 import { Button } from "./ui/button";
-import { Star, Heart, ArrowRight, ShoppingBag, MessageCircle } from "lucide-react";
+import { Star, Heart, ArrowRight, ShoppingBag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProducts } from "@/contexts/ProductsContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 
 const BADGE_COLORS = ["bg-[#D4AF37]", "bg-[#8B4513]", "bg-[#1C0F00]", "bg-[#D4AF37]", "bg-[#8B4513]", "bg-[#1C0F00]"];
 
@@ -14,6 +15,7 @@ export const FeaturedProducts = () => {
   const { getFeatured } = useProducts();
   const { settings } = useSiteSettings();
   const { addToCart } = useCart();
+  const { toggleWishlist, isWishlisted } = useWishlist();
   const featured = getFeatured();
   const [added, setAdded] = useState<string | null>(null);
 
@@ -136,11 +138,15 @@ export const FeaturedProducts = () => {
                     <Button
                       variant="outline"
                       size="icon"
-                      title="Quick WhatsApp enquiry"
-                      className="border-[#EAD7BB] hover:border-green-500 hover:bg-green-50 text-[#8B4513] hover:text-green-600 rounded-none h-10 w-10 flex-shrink-0"
-                      onClick={() => handleWhatsApp(product)}
+                      title={isWishlisted(product.id) ? "Remove from wishlist" : "Add to wishlist"}
+                      className={`rounded-none h-10 w-10 flex-shrink-0 transition-all ${
+                        isWishlisted(product.id)
+                          ? "bg-red-50 border-red-300 text-red-500 hover:bg-red-100"
+                          : "border-[#EAD7BB] hover:border-[#D4AF37] hover:bg-[#FDF5E6] text-[#8B4513]"
+                      }`}
+                      onClick={() => toggleWishlist(product)}
                     >
-                      <MessageCircle className="w-4 h-4" />
+                      <Heart className={`w-4 h-4 ${isWishlisted(product.id) ? "fill-current" : ""}`} />
                     </Button>
                   </div>
                 </div>

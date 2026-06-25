@@ -503,6 +503,35 @@ export default function Admin() {
               </div>
             </div>
 
+            {/* Payment Settings */}
+            <div className="bg-white border border-gray-200 p-5">
+              <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
+                <h3 className="font-serif font-bold text-[#1C0F00]">Payment Settings</h3>
+                <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5">UPI details shown to customers at checkout</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <SF
+                  label="UPI ID"
+                  value={sf.upiId}
+                  onChange={v => setSfField("upiId", v)}
+                  placeholder="yourname@upi or number@phonepe"
+                  note="Customers copy this to pay via PhonePe / Google Pay / Paytm"
+                />
+                <SF
+                  label="PhonePe Registered Number"
+                  value={sf.phonePeNumber}
+                  onChange={v => setSfField("phonePeNumber", v)}
+                  placeholder="9XXXXXXXXX"
+                  note="Used for the 'Open PhonePe' deep link at checkout"
+                />
+              </div>
+              <div className="mt-3 bg-blue-50 border border-blue-100 px-3 py-2.5 rounded-sm">
+                <p className="text-[11px] text-blue-700">
+                  <strong>Tip:</strong> After setting your UPI ID, customers can instantly copy it and pay via PhonePe, Google Pay, or Paytm — then send the screenshot on WhatsApp for order confirmation.
+                </p>
+              </div>
+            </div>
+
             {/* Announcement Bar */}
             <div className="bg-white border border-gray-200 p-5">
               <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">

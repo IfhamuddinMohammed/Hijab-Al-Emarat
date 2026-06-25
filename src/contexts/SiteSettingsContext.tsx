@@ -20,6 +20,8 @@ export interface SiteSettings {
   announcementEnabled: boolean;
   announcementText: string;
   currencySymbol: string;
+  upiId: string;
+  phonePeNumber: string;
 }
 
 const SETTINGS_KEY = "hae_settings_v1";
@@ -44,6 +46,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   announcementEnabled: true,
   announcementText: "Free Shipping on Orders Over ₹2,999 · Authentic Dubai Collection",
   currencySymbol: "₹",
+  upiId: "",
+  phonePeNumber: "",
 };
 
 interface SiteSettingsContextType {

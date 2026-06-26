@@ -2,6 +2,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { RotateCcw } from "lucide-react";
+import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="mb-10">
@@ -22,6 +23,7 @@ const Highlight = ({ icon, title, value }: { icon: string; title: string; value:
 );
 
 const ReturnPolicy = () => {
+  const { settings } = useSiteSettings();
   return (
     <div className="min-h-screen bg-[#FDF5E6]">
       <Header />
@@ -139,9 +141,9 @@ const ReturnPolicy = () => {
 
           <Section title="Contact for Returns">
             <div className="p-5 bg-[#FDF5E6] border border-[#D4AF37]/20 space-y-1">
-              <p><strong className="text-[#1C0F00]">Hijab Al Emarat — Returns Team</strong></p>
-              <p>WhatsApp: <a href="https://wa.me/971501234567" className="text-[#8B4513] hover:text-[#D4AF37] transition-colors">+971 50 123 4567</a></p>
-              <p>Email: <a href="mailto:hijabalemarat@gmail.com" className="text-[#8B4513] hover:text-[#D4AF37] transition-colors">hijabalemarat@gmail.com</a></p>
+              <p><strong className="text-[#1C0F00]">{settings.storeName} — Returns Team</strong></p>
+              <p>WhatsApp: <a href={`https://wa.me/${settings.whatsappNumber}`} className="text-[#8B4513] hover:text-[#D4AF37] transition-colors">{settings.phone}</a></p>
+              <p>Email: <a href={`mailto:${settings.email}`} className="text-[#8B4513] hover:text-[#D4AF37] transition-colors">{settings.email}</a></p>
               <p className="text-sm text-[#8B4513] mt-2">Please quote your order number in all correspondence.</p>
             </div>
           </Section>

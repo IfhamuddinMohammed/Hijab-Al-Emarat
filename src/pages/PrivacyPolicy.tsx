@@ -2,6 +2,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { Shield } from "lucide-react";
+import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="mb-10">
@@ -14,6 +15,7 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 );
 
 const PrivacyPolicy = () => {
+  const { settings } = useSiteSettings();
   return (
     <div className="min-h-screen bg-[#FDF5E6]">
       <Header />
@@ -130,10 +132,10 @@ const PrivacyPolicy = () => {
           <Section title="Contact Us">
             <p>For any privacy-related questions or requests, please reach out:</p>
             <div className="mt-4 p-5 bg-[#FDF5E6] border border-[#D4AF37]/20 space-y-1">
-              <p><strong className="text-[#1C0F00]">Hijab Al Emarat</strong></p>
-              <p>Dubai, United Arab Emirates</p>
-              <p>Email: <a href="mailto:hijabalemarat@gmail.com" className="text-[#8B4513] hover:text-[#D4AF37] transition-colors">hijabalemarat@gmail.com</a></p>
-              <p>WhatsApp: <a href="https://wa.me/971501234567" className="text-[#8B4513] hover:text-[#D4AF37] transition-colors">+971 50 123 4567</a></p>
+              <p><strong className="text-[#1C0F00]">{settings.storeName}</strong></p>
+              <p>{settings.address}</p>
+              <p>Email: <a href={`mailto:${settings.email}`} className="text-[#8B4513] hover:text-[#D4AF37] transition-colors">{settings.email}</a></p>
+              <p>WhatsApp: <a href={`https://wa.me/${settings.whatsappNumber}`} className="text-[#8B4513] hover:text-[#D4AF37] transition-colors">{settings.phone}</a></p>
             </div>
           </Section>
 

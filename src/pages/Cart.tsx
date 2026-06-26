@@ -246,7 +246,7 @@ const Cart = () => {
             {step === "address" && "Delivery Address"}
             {step === "payment" && "Choose Payment"}
           </h1>
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-1 sm:gap-2">
             {STEPS.map((s, i) => (
               <div key={s.id} className="flex items-center gap-2">
                 {i > 0 && <div className="h-[1px] w-6 bg-[#D4AF37]/30" />}
@@ -272,7 +272,7 @@ const Cart = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-3">
                 {cartItems.map(({ product, quantity }) => (
-                  <div key={product.id} className="bg-white border border-[#EAD7BB] p-4 flex gap-4">
+                  <div key={product.id} className="bg-white border border-[#EAD7BB] p-4 flex flex-col sm:flex-row gap-4">
                     <img src={product.image_url} alt={product.name}
                       className="w-20 h-24 object-cover flex-shrink-0"
                       onError={e => { (e.target as HTMLImageElement).src = "https://res.cloudinary.com/df4autxjg/image/upload/v1751638933/ROYAL_BLACK_ABAYA_hrx8kd.png"; }} />

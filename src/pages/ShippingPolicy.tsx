@@ -2,6 +2,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { Truck } from "lucide-react";
+import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="mb-10">
@@ -27,6 +28,7 @@ const ShippingRow = ({
 );
 
 const ShippingPolicy = () => {
+  const { settings } = useSiteSettings();
   return (
     <div className="min-h-screen bg-[#FDF5E6]">
       <Header />
@@ -183,9 +185,9 @@ const ShippingPolicy = () => {
 
           <Section title="Contact for Shipping Queries">
             <div className="p-5 bg-[#FDF5E6] border border-[#D4AF37]/20 space-y-1">
-              <p><strong className="text-[#1C0F00]">Hijab Al Emarat</strong></p>
-              <p>WhatsApp: <a href="https://wa.me/971501234567" className="text-[#8B4513] hover:text-[#D4AF37] transition-colors">+971 50 123 4567</a></p>
-              <p>Email: <a href="mailto:hijabalemarat@gmail.com" className="text-[#8B4513] hover:text-[#D4AF37] transition-colors">hijabalemarat@gmail.com</a></p>
+              <p><strong className="text-[#1C0F00]">{settings.storeName}</strong></p>
+              <p>WhatsApp: <a href={`https://wa.me/${settings.whatsappNumber}`} className="text-[#8B4513] hover:text-[#D4AF37] transition-colors">{settings.phone}</a></p>
+              <p>Email: <a href={`mailto:${settings.email}`} className="text-[#8B4513] hover:text-[#D4AF37] transition-colors">{settings.email}</a></p>
             </div>
           </Section>
 

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface SiteSettings {
   storeName: string;
@@ -23,8 +24,6 @@ export interface SiteSettings {
   upiId: string;
   phonePeNumber: string;
 }
-
-const SETTINGS_KEY = "hae_settings_v1";
 
 export const DEFAULT_SETTINGS: SiteSettings = {
   storeName: "Hijab Al Emarat",
@@ -52,31 +51,60 @@ export const DEFAULT_SETTINGS: SiteSettings = {
 
 interface SiteSettingsContextType {
   settings: SiteSettings;
-  updateSettings: (updates: Partial<SiteSettings>) => void;
-  resetSettings: () => void;
+  updateSettings: (updates: Partial<SiteSettings>) => Promise<void>;
+  resetSettings: () => Promise<void>;
 }
 
 const SiteSettingsContext = createContext<SiteSettingsContextType | undefined>(undefined);
 
 export const SiteSettingsProvider = ({ children }: { children: ReactNode }) => {
-  const [settings, setSettings] = useState<SiteSettings>(() => {
-    try {
-      const stored = localStorage.getItem(SETTINGS_KEY);
-      if (stored) return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
-    } catch {}
-    return DEFAULT_SETTINGS;
-  });
+  const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
 
   useEffect(() => {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-  }, [settings]);
+    const load = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("site_settings")
+          .select("data")
+          .eq("id", 1)
+          .single();
+        if (error && error.code !== "PGRST116") throw error;
+        if (data?.data) {
+          setSettings({ ...DEFAULT_SETTINGS, ...(data.data as Partial<SiteSettings>) });
+        }
+      } catch (err) {
+        console.warn("[Settings] Supabase unavailable — using localStorage fallback:", err);
+        try {
+          const stored = localStorage.getItem("hae_settings_v1");
+          if (stored) setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(stored) });
+        } catch {}
+      }
+    };
+    load();
+  }, []);
 
-  const updateSettings = (updates: Partial<SiteSettings>) => {
-    setSettings(prev => ({ ...prev, ...updates }));
+  const updateSettings = async (updates: Partial<SiteSettings>) => {
+    const next = { ...settings, ...updates };
+    setSettings(next);
+    try {
+      await supabase
+        .from("site_settings")
+        .upsert({ id: 1, data: next, updated_at: new Date().toISOString() });
+    } catch (err) {
+      console.warn("[Settings] Supabase save failed:", err);
+      localStorage.setItem("hae_settings_v1", JSON.stringify(next));
+    }
   };
 
-  const resetSettings = () => {
+  const resetSettings = async () => {
     setSettings(DEFAULT_SETTINGS);
+    try {
+      await supabase
+        .from("site_settings")
+        .upsert({ id: 1, data: DEFAULT_SETTINGS, updated_at: new Date().toISOString() });
+    } catch {
+      localStorage.setItem("hae_settings_v1", JSON.stringify(DEFAULT_SETTINGS));
+    }
   };
 
   return (

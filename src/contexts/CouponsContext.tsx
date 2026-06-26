@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export type DiscountType = "percent" | "flat" | "freeship";
 
@@ -21,63 +22,67 @@ interface CouponsContextType {
   calcDiscount: (coupon: Coupon, subtotal: number, shipping: number) => number;
 }
 
-const STORAGE_KEY = "hae_coupons_v1";
-
 const DEFAULT_COUPONS: Coupon[] = [
-  {
-    id: "c1",
-    code: "HIJABFIRST",
-    type: "percent",
-    value: 10,
-    minOrder: 0,
-    active: true,
-    description: "10% off your first order",
-  },
-  {
-    id: "c2",
-    code: "SAVE200",
-    type: "flat",
-    value: 200,
-    minOrder: 1500,
-    active: true,
-    description: "₹200 off on orders above ₹1500",
-  },
-  {
-    id: "c3",
-    code: "FREESHIP",
-    type: "freeship",
-    value: 0,
-    minOrder: 0,
-    active: true,
-    description: "Free shipping on any order",
-  },
+  { id: "c1", code: "HIJABFIRST", type: "percent",  value: 10,  minOrder: 0,    active: true, description: "10% off your first order" },
+  { id: "c2", code: "SAVE200",    type: "flat",     value: 200, minOrder: 1500, active: true, description: "₹200 off on orders above ₹1500" },
+  { id: "c3", code: "FREESHIP",   type: "freeship", value: 0,   minOrder: 0,    active: true, description: "Free shipping on any order" },
 ];
 
-const load = (): Coupon[] => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_COUPONS));
-  return DEFAULT_COUPONS;
-};
-
-const save = (coupons: Coupon[]) => localStorage.setItem(STORAGE_KEY, JSON.stringify(coupons));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const fromDB = (row: any): Coupon => ({
+  id:          String(row.id),
+  code:        String(row.code),
+  type:        row.type as DiscountType,
+  value:       Number(row.value),
+  minOrder:    Number(row.min_order ?? 0),
+  active:      Boolean(row.active),
+  description: String(row.description ?? ""),
+});
 
 const CouponsContext = createContext<CouponsContextType | undefined>(undefined);
 
 export const CouponsProvider = ({ children }: { children: ReactNode }) => {
-  const [coupons, setCoupons] = useState<Coupon[]>(load);
+  const [coupons, setCoupons] = useState<Coupon[]>(DEFAULT_COUPONS);
 
-  const set = (updated: Coupon[]) => { setCoupons(updated); save(updated); };
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { data, error } = await supabase.from("coupons").select("*").order("created_at");
+        if (error) throw error;
+        if (data && data.length > 0) setCoupons(data.map(fromDB));
+      } catch (err) {
+        console.warn("[Coupons] Supabase unavailable — using defaults:", err);
+        try {
+          const stored = localStorage.getItem("hae_coupons_v1");
+          if (stored) setCoupons(JSON.parse(stored));
+        } catch {}
+      }
+    };
+    load();
+  }, []);
 
-  const addCoupon = (c: Omit<Coupon, "id">) =>
-    set([...coupons, { ...c, id: `c_${Date.now()}` }]);
+  const addCoupon = async (c: Omit<Coupon, "id">) => {
+    const row = { code: c.code, type: c.type, value: c.value, min_order: c.minOrder, active: c.active, description: c.description };
+    const { data } = await supabase.from("coupons").insert(row).select().single();
+    if (data) setCoupons(prev => [...prev, fromDB(data)]);
+  };
 
-  const updateCoupon = (id: string, updates: Partial<Coupon>) =>
-    set(coupons.map(c => c.id === id ? { ...c, ...updates } : c));
+  const updateCoupon = async (id: string, updates: Partial<Coupon>) => {
+    const row: Record<string, unknown> = {};
+    if (updates.code !== undefined) row.code = updates.code;
+    if (updates.type !== undefined) row.type = updates.type;
+    if (updates.value !== undefined) row.value = updates.value;
+    if (updates.minOrder !== undefined) row.min_order = updates.minOrder;
+    if (updates.active !== undefined) row.active = updates.active;
+    if (updates.description !== undefined) row.description = updates.description;
+    const { data } = await supabase.from("coupons").update(row).eq("id", id).select().single();
+    if (data) setCoupons(prev => prev.map(c => c.id === id ? fromDB(data) : c));
+  };
 
-  const deleteCoupon = (id: string) => set(coupons.filter(c => c.id !== id));
+  const deleteCoupon = async (id: string) => {
+    const { error } = await supabase.from("coupons").delete().eq("id", id);
+    if (!error) setCoupons(prev => prev.filter(c => c.id !== id));
+  };
 
   const validateCoupon = (code: string, orderTotal: number) => {
     const coupon = coupons.find(c => c.code.toUpperCase() === code.toUpperCase() && c.active);

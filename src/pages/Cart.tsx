@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -111,7 +112,53 @@ const Cart = () => {
 
   const removeCoupon = () => { setAppliedCoupon(null); setCouponError(""); setCouponInput(""); setShowCouponList(false); };
 
-  const buildOrderMessage = (method: string) => {
+  const generateOrderNumber = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let code = "";
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    return `HAE-${code}`;
+  };
+
+  const saveOrderToSupabase = async (paymentMethod: string): Promise<string> => {
+    const orderNumber = generateOrderNumber();
+    try {
+      await supabase.from("orders").insert({
+        order_number: orderNumber,
+        customer_name: addr.fullName,
+        customer_phone: addr.phone,
+        address_line: addr.address,
+        city: addr.city,
+        state: addr.state,
+        pincode: addr.pincode,
+        landmark: addr.landmark,
+        items: cartItems.map(i => ({
+          product_id: i.product.id,
+          product_name: i.product.name,
+          product_image: i.product.image_url,
+          quantity: i.quantity,
+          unit_price: i.product.price,
+          total_price: i.product.price * i.quantity,
+        })),
+        subtotal: cartTotal,
+        shipping,
+        discount,
+        total,
+        payment_method: paymentMethod,
+        coupon_code: appliedCoupon?.code || "",
+        status: "pending",
+      });
+    } catch (err) {
+      console.warn("[Order] Supabase save failed:", err);
+    }
+    return orderNumber;
+  };
+
+  const buildOrderMessage = (method: string, orderNum?: string) => {
+    const orderRef = orderNum ? `\n📋 Order Ref: ${orderNum}` : "";
+    return buildOrderMessageBase(method) + orderRef;
+  };
+
+  const buildOrderMessageBase = (method: string) => {
     const lines = cartItems.map(i =>
       `🛍 ${i.product.name} × ${i.quantity} — ${sym}${(i.product.price * i.quantity).toLocaleString()}`
     ).join("\n");
@@ -133,21 +180,27 @@ const Cart = () => {
     );
   };
 
-  const handleWhatsAppOrder = () => {
-    window.open(`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(buildOrderMessage("WhatsApp Order"))}`, "_blank");
-    clearCart(); navigate("/");
+  const handleWhatsAppOrder = async () => {
+    window.open(`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(buildOrderMessageBase("WhatsApp Order"))}`, "_blank");
+    const orderNum = await saveOrderToSupabase("whatsapp");
+    clearCart();
+    navigate("/order-confirmation", { state: { orderNumber: orderNum, customerName: addr.fullName, total, itemCount: cartItems.reduce((s, i) => s + i.quantity, 0), paymentMethod: "WhatsApp Order" } });
   };
 
-  const handleCOD = () => {
-    window.open(`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(buildOrderMessage("Cash on Delivery"))}`, "_blank");
-    clearCart(); navigate("/");
+  const handleCOD = async () => {
+    window.open(`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(buildOrderMessageBase("Cash on Delivery"))}`, "_blank");
+    const orderNum = await saveOrderToSupabase("cod");
+    clearCart();
+    navigate("/order-confirmation", { state: { orderNumber: orderNum, customerName: addr.fullName, total, itemCount: cartItems.reduce((s, i) => s + i.quantity, 0), paymentMethod: "Cash on Delivery" } });
   };
 
-  const handleUpiPaid = () => {
-    const msg = buildOrderMessage("UPI Payment") +
+  const handleUpiPaid = async () => {
+    const msg = buildOrderMessageBase("UPI Payment") +
       `\n\nI have completed the UPI payment of ${sym}${total.toLocaleString()} to ${settings.upiId}. Please find the payment screenshot attached.`;
     window.open(`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(msg)}`, "_blank");
-    clearCart(); navigate("/");
+    const orderNum = await saveOrderToSupabase("upi");
+    clearCart();
+    navigate("/order-confirmation", { state: { orderNumber: orderNum, customerName: addr.fullName, total, itemCount: cartItems.reduce((s, i) => s + i.quantity, 0), paymentMethod: "UPI Payment" } });
   };
 
   const copyUpi = () => {

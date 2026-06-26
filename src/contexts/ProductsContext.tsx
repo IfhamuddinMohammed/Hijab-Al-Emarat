@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface Product {
   id: string;
@@ -393,8 +394,67 @@ const DEFAULT_PRODUCTS: Product[] = [
   },
 ];
 
+// ── Supabase row ↔ Product mappers ───────────────────────────────────────────
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const fromDB = (row: any): Product => ({
+  id: String(row.id),
+  name: String(row.name ?? ""),
+  description: String(row.description ?? ""),
+  price: Number(row.price),
+  originalPrice: Number(row.original_price ?? row.price),
+  stock_quantity: Number(row.stock_quantity ?? 0),
+  category: String(row.category ?? ""),
+  image_url: String(row.image_url ?? ""),
+  is_featured: Boolean(row.is_featured),
+  created_at: String(row.created_at ?? ""),
+  sizes: Array.isArray(row.sizes) ? (row.sizes as string[]) : [],
+  colors: Array.isArray(row.colors) ? (row.colors as string[]) : [],
+  material: String(row.material ?? ""),
+  care_instructions: String(row.care_instructions ?? ""),
+  images: Array.isArray(row.images) ? (row.images as string[]) : [],
+});
+
+const toDB = (p: Product, withId = true) => {
+  const r: Record<string, unknown> = {
+    name: p.name,
+    description: p.description || "",
+    price: p.price,
+    original_price: p.originalPrice || p.price,
+    stock_quantity: p.stock_quantity || 0,
+    category: p.category || "",
+    image_url: p.image_url || "",
+    is_featured: p.is_featured || false,
+    material: p.material || "",
+    care_instructions: p.care_instructions || "",
+    sizes: p.sizes || [],
+    colors: p.colors || [],
+    images: p.images || [],
+  };
+  if (withId && p.id) r.id = p.id;
+  return r;
+};
+
+const toDBPartial = (u: Partial<Product>): Record<string, unknown> => {
+  const r: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (u.name !== undefined) r.name = u.name;
+  if (u.description !== undefined) r.description = u.description;
+  if (u.price !== undefined) r.price = u.price;
+  if (u.originalPrice !== undefined) r.original_price = u.originalPrice;
+  if (u.stock_quantity !== undefined) r.stock_quantity = u.stock_quantity;
+  if (u.category !== undefined) r.category = u.category;
+  if (u.image_url !== undefined) r.image_url = u.image_url;
+  if (u.is_featured !== undefined) r.is_featured = u.is_featured;
+  if (u.material !== undefined) r.material = u.material;
+  if (u.care_instructions !== undefined) r.care_instructions = u.care_instructions;
+  if (u.sizes !== undefined) r.sizes = u.sizes;
+  if (u.colors !== undefined) r.colors = u.colors;
+  if (u.images !== undefined) r.images = u.images;
+  return r;
+};
+
 interface ProductsContextType {
   products: Product[];
+  loading: boolean;
   addProduct: (p: Omit<Product, "id" | "created_at">) => void;
   updateProduct: (id: string, p: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
@@ -406,39 +466,62 @@ interface ProductsContextType {
 const ProductsContext = createContext<ProductsContextType | undefined>(undefined);
 
 export const ProductsProvider = ({ children }: { children: ReactNode }) => {
-  const [products, setProducts] = useState<Product[]>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed: Product[] = JSON.parse(stored);
-        return parsed.map(p => {
-          const def = DEFAULT_PRODUCTS.find(d => d.id === p.id);
-          return {
-            sizes: def?.sizes,
-            colors: def?.colors,
-            material: def?.material,
-            care_instructions: def?.care_instructions,
-            images: def?.images,
-            ...p,
-          };
-        });
-      }
-    } catch {}
-    return DEFAULT_PRODUCTS;
-  });
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
-  }, [products]);
+    const load = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase.from("products").select("*").order("created_at");
+        if (error) throw error;
+        if (data && data.length > 0) {
+          setProducts(data.map(fromDB));
+        } else {
+          // First launch: seed defaults into Supabase
+          const rows = DEFAULT_PRODUCTS.map(p => toDB(p, true));
+          const { data: seeded } = await supabase.from("products").insert(rows).select();
+          setProducts(seeded ? seeded.map(fromDB) : DEFAULT_PRODUCTS);
+        }
+      } catch (err) {
+        console.warn("[Products] Supabase unavailable — using localStorage fallback:", err);
+        try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          if (stored) {
+            const parsed: Product[] = JSON.parse(stored);
+            setProducts(parsed.map(p => {
+              const def = DEFAULT_PRODUCTS.find(d => d.id === p.id);
+              return { ...def, ...p };
+            }));
+          } else {
+            setProducts(DEFAULT_PRODUCTS);
+          }
+        } catch {
+          setProducts(DEFAULT_PRODUCTS);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
-  const addProduct = (p: Omit<Product, "id" | "created_at">) =>
-    setProducts(prev => [{ ...p, id: Date.now().toString(), created_at: new Date().toISOString() }, ...prev]);
+  const addProduct = async (p: Omit<Product, "id" | "created_at">) => {
+    const row = toDB({ ...p, id: "", created_at: "" }, false);
+    const { data } = await supabase.from("products").insert(row).select().single();
+    if (data) setProducts(prev => [fromDB(data), ...prev]);
+  };
 
-  const updateProduct = (id: string, updates: Partial<Product>) =>
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+  const updateProduct = async (id: string, updates: Partial<Product>) => {
+    const row = toDBPartial(updates);
+    const { data } = await supabase.from("products").update(row).eq("id", id).select().single();
+    if (data) setProducts(prev => prev.map(p => p.id === id ? fromDB(data) : p));
+  };
 
-  const deleteProduct = (id: string) =>
-    setProducts(prev => prev.filter(p => p.id !== id));
+  const deleteProduct = async (id: string) => {
+    const { error } = await supabase.from("products").delete().eq("id", id);
+    if (!error) setProducts(prev => prev.filter(p => p.id !== id));
+  };
 
   const getFeatured = () =>
     products.filter(p => p.is_featured && p.stock_quantity > 0).slice(0, 6);
@@ -449,7 +532,7 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
     products.filter(p => p.id !== id && p.category === category && p.stock_quantity > 0).slice(0, limit);
 
   return (
-    <ProductsContext.Provider value={{ products, addProduct, updateProduct, deleteProduct, getFeatured, getById, getRelated }}>
+    <ProductsContext.Provider value={{ products, loading, addProduct, updateProduct, deleteProduct, getFeatured, getById, getRelated }}>
       {children}
     </ProductsContext.Provider>
   );

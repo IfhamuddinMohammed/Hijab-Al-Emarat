@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useProducts, type Product } from "@/contexts/ProductsContext";
 import { useSiteSettings, DEFAULT_SETTINGS, type SiteSettings } from "@/contexts/SiteSettingsContext";
 import { useCoupons, type Coupon, type DiscountType } from "@/contexts/CouponsContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Package, Plus, Edit2, Trash2, Star, LogOut,
-  AlertTriangle, TrendingUp, Eye, X, Settings, CheckCircle2, Tag
+  AlertTriangle, TrendingUp, Eye, X, Settings, CheckCircle2, Tag,
+  ShoppingCart, Clock, Truck, Check
 } from "lucide-react";
 
 const ADMIN_PASSWORD = "hijab2024";
@@ -60,7 +62,46 @@ export default function Admin() {
   const [authed, setAuthed] = useState(() => sessionStorage.getItem("hae_admin") === "1");
   const [pwInput, setPwInput] = useState("");
   const [pwError, setPwError] = useState(false);
-  const [activeTab, setActiveTab] = useState<"products" | "settings" | "coupons">("products");
+  const [activeTab, setActiveTab] = useState<"products" | "settings" | "coupons" | "orders">("products");
+
+  // ── Orders state ──────────────────────────────────────────────────────────
+  interface OrderRow {
+    id: string; order_number: string; customer_name: string; customer_phone: string;
+    city: string; state: string; total: number; payment_method: string;
+    status: string; coupon_code: string; created_at: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    items: any[];
+  }
+  const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+
+  const loadOrders = async () => {
+    setOrdersLoading(true);
+    const { data } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
+    if (data) setOrders(data as OrderRow[]);
+    setOrdersLoading(false);
+  };
+
+  useEffect(() => {
+    if (authed && activeTab === "orders") loadOrders();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authed, activeTab]);
+
+  const updateOrderStatus = async (id: string, status: string) => {
+    await supabase.from("orders").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+  };
+
+  const ORDER_STATUSES = ["pending","confirmed","processing","shipped","delivered","cancelled"] as const;
+  const statusColor: Record<string, string> = {
+    pending:    "bg-amber-100 text-amber-700",
+    confirmed:  "bg-blue-100 text-blue-700",
+    processing: "bg-purple-100 text-purple-700",
+    shipped:    "bg-indigo-100 text-indigo-700",
+    delivered:  "bg-green-100 text-green-700",
+    cancelled:  "bg-red-100 text-red-700",
+  };
 
   // ── Coupon form state ────────────────────────────────────────────────────
   const emptyCouponForm = { code: "", type: "percent" as DiscountType, value: "", minOrder: "", description: "", active: true };
@@ -251,6 +292,7 @@ export default function Admin() {
           <div className="flex">
             {[
               { id: "products" as const, icon: Package, label: "Products" },
+              { id: "orders" as const, icon: ShoppingCart, label: "Orders", badge: orders.filter(o => o.status === "pending").length || undefined },
               { id: "coupons" as const, icon: Tag, label: "Coupons" },
               { id: "settings" as const, icon: Settings, label: "Store Settings" },
             ].map(tab => (
@@ -265,6 +307,9 @@ export default function Admin() {
               >
                 <tab.icon className="w-3.5 h-3.5" />
                 {tab.label}
+                {"badge" in tab && tab.badge ? (
+                  <span className="ml-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">{tab.badge}</span>
+                ) : null}
               </button>
             ))}
           </div>
@@ -868,6 +913,139 @@ export default function Admin() {
                 Try <code className="bg-blue-100 px-1 font-mono">HIJABFIRST</code> for new customers,{" "}
                 <code className="bg-blue-100 px-1 font-mono">FREESHIP</code> for hesitant buyers, and{" "}
                 <code className="bg-blue-100 px-1 font-mono">SAVE200</code> for bulk orders.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ══ ORDERS TAB ════════════════════════════════════════════════════ */}
+        {activeTab === "orders" && (
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-serif font-bold text-[#1C0F00] text-lg">Orders</h2>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {orders.filter(o => o.status === "pending").length} pending · {orders.length} total
+                </p>
+              </div>
+              <Button onClick={loadOrders} variant="outline" className="rounded-none border-gray-200 text-xs h-9 px-4">
+                ↻ Refresh
+              </Button>
+            </div>
+
+            {ordersLoading ? (
+              <div className="bg-white border border-gray-200 p-12 text-center text-gray-400 text-sm">
+                Loading orders…
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="bg-white border border-gray-200 p-12 text-center">
+                <ShoppingCart className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                <p className="text-gray-400 text-sm">No orders yet.</p>
+                <p className="text-gray-300 text-xs mt-1">Orders placed on the storefront will appear here.</p>
+              </div>
+            ) : (
+              <div className="bg-white border border-gray-200">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-100 bg-gray-50">
+                        <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Order</th>
+                        <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Customer</th>
+                        <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 hidden md:table-cell">Location</th>
+                        <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Total</th>
+                        <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 hidden md:table-cell">Payment</th>
+                        <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Status</th>
+                        <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orders.map(order => (
+                        <>
+                          <tr key={order.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                            <td className="px-4 py-3">
+                              <div>
+                                <p className="font-mono font-bold text-[#1C0F00] text-xs">{order.order_number}</p>
+                                <p className="text-[10px] text-gray-400 mt-0.5">
+                                  {new Date(order.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                                </p>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <p className="font-semibold text-[#1C0F00] text-xs">{order.customer_name}</p>
+                              <p className="text-[10px] text-gray-400">{order.customer_phone}</p>
+                            </td>
+                            <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">
+                              {[order.city, order.state].filter(Boolean).join(", ") || "—"}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="font-bold text-[#D4AF37]">₹{Number(order.total).toLocaleString()}</span>
+                            </td>
+                            <td className="px-4 py-3 text-xs text-gray-500 capitalize hidden md:table-cell">
+                              {order.payment_method}
+                              {order.coupon_code && <span className="ml-1 text-[9px] text-green-600 font-mono bg-green-50 px-1">{order.coupon_code}</span>}
+                            </td>
+                            <td className="px-4 py-3">
+                              <select
+                                value={order.status}
+                                onChange={e => updateOrderStatus(order.id, e.target.value)}
+                                className={`text-[10px] font-bold px-2 py-1 border-0 rounded cursor-pointer outline-none ${statusColor[order.status] ?? "bg-gray-100 text-gray-600"}`}
+                              >
+                                {ORDER_STATUSES.map(s => (
+                                  <option key={s} value={s} className="bg-white text-gray-800">{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
+                                  className="text-[10px] font-bold text-[#D4AF37] hover:underline"
+                                >
+                                  {expandedOrder === order.id ? "Hide" : "Details"}
+                                </button>
+                                <a
+                                  href={`https://wa.me/${order.customer_phone.replace(/\D/g, "")}?text=Hi ${order.customer_name.split(" ")[0]}! Your order ${order.order_number} has been updated. Please check your status.`}
+                                  target="_blank" rel="noreferrer"
+                                  className="text-[10px] font-bold text-green-600 hover:underline"
+                                >
+                                  WA
+                                </a>
+                              </div>
+                            </td>
+                          </tr>
+                          {expandedOrder === order.id && (
+                            <tr key={`${order.id}-detail`} className="bg-[#FDF5E6] border-b border-[#D4AF37]/10">
+                              <td colSpan={7} className="px-6 py-4">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-[#8B4513] mb-3">Order Items</p>
+                                <div className="space-y-2">
+                                  {(Array.isArray(order.items) ? order.items : []).map((item: { product_name: string; quantity: number; unit_price: number; total_price: number }, i: number) => (
+                                    <div key={i} className="flex items-center justify-between text-xs text-[#4A3728]">
+                                      <span>{item.product_name} × {item.quantity}</span>
+                                      <span className="font-semibold">₹{Number(item.total_price).toLocaleString()}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="flex gap-4 mt-3 pt-3 border-t border-[#D4AF37]/20 text-xs text-[#8B4513]">
+                                  <span><strong>Status icons:</strong></span>
+                                  {order.status === "pending"    && <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Awaiting confirmation</span>}
+                                  {order.status === "confirmed"  && <span className="flex items-center gap-1"><Check className="w-3 h-3 text-blue-500" /> Order confirmed</span>}
+                                  {order.status === "shipped"    && <span className="flex items-center gap-1"><Truck className="w-3 h-3 text-indigo-500" /> In transit</span>}
+                                  {order.status === "delivered"  && <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Delivered</span>}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-amber-50 border border-amber-100 px-4 py-3">
+              <p className="text-[11px] text-amber-700">
+                <strong>Tip:</strong> Update the order status after each step — customers can follow up via WhatsApp with their order reference number. Status updates are saved in real time.
               </p>
             </div>
           </div>

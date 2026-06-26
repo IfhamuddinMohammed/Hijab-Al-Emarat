@@ -9,6 +9,7 @@ import { SiteSettingsProvider } from "@/contexts/SiteSettingsContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { CouponsProvider } from "@/contexts/CouponsContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import About from "./pages/About";
@@ -22,6 +23,8 @@ import ReturnPolicy from "./pages/ReturnPolicy";
 import ShippingPolicy from "./pages/ShippingPolicy";
 import Terms from "./pages/Terms";
 import OrderConfirmation from "./pages/OrderConfirmation";
+import Login from "./pages/Login";
+import MyOrders from "./pages/MyOrders";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +32,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <AuthProvider>
       <SiteSettingsProvider>
       <ProductsProvider>
       <CartProvider>
@@ -51,6 +55,8 @@ const App = () => (
             <Route path="/shipping-policy" element={<ShippingPolicy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/order-confirmation" element={<OrderConfirmation />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/my-orders" element={<MyOrders />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
@@ -59,6 +65,7 @@ const App = () => (
       </CartProvider>
       </ProductsProvider>
       </SiteSettingsProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

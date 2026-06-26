@@ -3,13 +3,15 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Package, MessageCircle, ShoppingBag, Home } from "lucide-react";
+import { CheckCircle2, Package, MessageCircle, ShoppingBag, Home, User } from "lucide-react";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const OrderConfirmation = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const { settings } = useSiteSettings();
+  const { user } = useAuth();
 
   const orderNumber   = state?.orderNumber   ?? "—";
   const customerName  = state?.customerName  ?? "";
@@ -81,6 +83,23 @@ const OrderConfirmation = () => {
                 ))}
               </div>
             </div>
+
+            {/* Login prompt for guests */}
+            {!user && (
+              <div className="bg-[#FDF5E6] border border-[#D4AF37]/30 p-4 flex items-start gap-3">
+                <User className="w-5 h-5 text-[#D4AF37] flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-[#1C0F00] text-sm mb-0.5">Track this order anytime</p>
+                  <p className="text-xs text-[#8B4513]/70 mb-2.5">Create a free account with your email to view order history and get status updates.</p>
+                  <button
+                    onClick={() => navigate(`/login?return=/my-orders`)}
+                    className="text-xs font-bold text-[#D4AF37] hover:underline uppercase tracking-wider flex items-center gap-1"
+                  >
+                    <User className="w-3 h-3" /> Create Account / Sign In →
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* WhatsApp follow-up */}
             <div className="bg-[#f0fdf4] border border-green-200 p-4 flex items-start gap-3">

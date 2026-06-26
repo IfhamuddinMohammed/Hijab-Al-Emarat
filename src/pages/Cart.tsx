@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,12 +17,12 @@ import { useCoupons, type Coupon } from "@/contexts/CouponsContext";
 import { useNavigate } from "react-router-dom";
 
 interface AddressData {
-  fullName: string; phone: string; address: string;
+  fullName: string; phone: string; email: string; address: string;
   city: string; state: string; pincode: string;
   landmark: string; location: { lat: number; lng: number } | null;
 }
 const EMPTY_ADDRESS: AddressData = {
-  fullName: "", phone: "", address: "", city: "",
+  fullName: "", phone: "", email: "", address: "", city: "",
   state: "", pincode: "", landmark: "", location: null,
 };
 
@@ -38,6 +39,7 @@ const Cart = () => {
   const { cartItems, removeFromCart, updateQuantity, clearCart, cartTotal } = useCart();
   const { settings } = useSiteSettings();
   const { coupons, validateCoupon, calcDiscount } = useCoupons();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const [step, setStep] = useState<Step>("cart");
@@ -62,6 +64,11 @@ const Cart = () => {
   const discount = appliedCoupon ? calcDiscount(appliedCoupon, cartTotal, baseShipping) : 0;
   const shipping = appliedCoupon?.type === "freeship" ? 0 : baseShipping;
   const total = cartTotal - (appliedCoupon?.type !== "freeship" ? discount : 0) + shipping;
+
+  // Pre-fill email from auth user
+  useEffect(() => {
+    if (user?.email) setAddr(prev => ({ ...prev, email: user.email! }));
+  }, [user]);
 
   const setField = (key: keyof AddressData, val: string) =>
     setAddr(prev => ({ ...prev, [key]: val }));
@@ -126,6 +133,7 @@ const Cart = () => {
         order_number: orderNumber,
         customer_name: addr.fullName,
         customer_phone: addr.phone,
+        customer_email: addr.email,
         address_line: addr.address,
         city: addr.city,
         state: addr.state,
@@ -461,6 +469,18 @@ const Cart = () => {
                       <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Phone Number *</label>
                       <Input type="tel" value={addr.phone} onChange={e => setField("phone", e.target.value)} placeholder="+91 XXXXX XXXXX" className="rounded-none border-gray-200 focus:border-[#D4AF37] focus:ring-0 text-sm" />
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">
+                      Email Address <span className="text-[#D4AF37] font-normal normal-case tracking-normal">(to receive order updates &amp; view My Orders)</span>
+                    </label>
+                    <Input
+                      type="email"
+                      value={addr.email}
+                      onChange={e => setField("email", e.target.value)}
+                      placeholder="you@example.com"
+                      className="rounded-none border-gray-200 focus:border-[#D4AF37] focus:ring-0 text-sm"
+                    />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Street Address *</label>
